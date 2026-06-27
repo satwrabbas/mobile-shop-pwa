@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logoutAction } from "../auth/actions";
-import { Package, RefreshCw, PlusCircle, LogOut } from "lucide-react";
+import { Package, RefreshCw, PlusCircle, LogOut, LayoutDashboard , Smartphone } from "lucide-react";
 
 export default function AdminNav() {
   const pathname = usePathname();
@@ -22,9 +22,10 @@ export default function AdminNav() {
   };
 
   const navLinks = [
+    { name: "الإحصائيات", href: "/admin", icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: "الطلبات", href: "/admin/orders", icon: <Package className="w-5 h-5" /> },
     { name: "طلبات الاستبدال", href: "/admin/trade-in", icon: <RefreshCw className="w-5 h-5" /> },
-    { name: "إضافة منتج", href: "/admin/products/new", icon: <PlusCircle className="w-5 h-5" /> },
+    { name: "المنتجات", href: "/admin/products", icon: <Smartphone className="w-5 h-5" /> },
   ];
 
   return (
