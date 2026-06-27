@@ -2,10 +2,10 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { Product } from "./types";
 
+// 1. دالة جلب جميع المنتجات (للصفحة الرئيسية والعروض)
 export async function getProducts(): Promise<Product[]> {
   const supabase = await createServerSupabaseClient();
   
-  // جلب جميع المنتجات وترتيبها من الأحدث للأقدم
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -17,10 +17,9 @@ export async function getProducts(): Promise<Product[]> {
   }
 
   return data as Product[];
-
-  
 }
 
+// 2. دالة جلب منتج واحد (لصفحة تفاصيل المنتج)
 export async function getProductById(id: string): Promise<Product | null> {
   const supabase = await createServerSupabaseClient();
   
@@ -36,4 +35,21 @@ export async function getProductById(id: string): Promise<Product | null> {
   }
 
   return data as Product;
+}
+
+// 3. دالة جلب الحزم الذكية المرتبطة بالمنتج
+export async function getProductBundles(productId: string) {
+  const supabase = await createServerSupabaseClient();
+  
+  const { data, error } = await supabase
+    .from('bundles')
+    .select(`
+      id,
+      bundle_price,
+      accessory:accessory_product_id (*)
+    `)
+    .eq('main_product_id', productId);
+
+  if (error) return [];
+  return data;
 }

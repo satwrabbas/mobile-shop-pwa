@@ -44,6 +44,7 @@ The content is organized as follows:
 .gitignore
 AGENTS.md
 CLAUDE.md
+cmd.md
 eslint.config.mjs
 next.config.ts
 package.json
@@ -76,18 +77,292 @@ src/domains/cart/store.ts
 src/domains/orders/actions.ts
 src/domains/products/components/AddToCartButton.tsx
 src/domains/products/components/ProductCard.tsx
+src/domains/products/components/SmartBundle.tsx
 src/domains/products/queries.ts
 src/domains/products/types.ts
 src/domains/trade-in/actions.ts
 src/lib/supabase-server.ts
 src/lib/supabase.ts
-src/middleware.ts
+src/proxy.ts
 src/shared/components/Header.tsx
 tsconfig.json
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="src/domains/products/components/SmartBundle.tsx">
+// src/domains/products/components/SmartBundle.tsx
+"use client";
+
+import Image from "next/image";
+import { Plus, Check } from "lucide-react";
+import { useState } from "react";
+import { useCartStore } from "@/domains/cart/store";
+import { Product } from "../types";
+
+interface SmartBundleProps {
+  mainProduct: Product;
+  bundle: {
+    bundle_price: number;
+    accessory: Product;
+  };
+}
+
+export default function SmartBundle({ mainProduct, bundle }: SmartBundleProps) {
+  const addBundle = useCartStore((state) => state.addBundle);
+  const [isAdded, setIsAdded] = useState(false);
+
+  const mainPrice = mainProduct.discount_price ?? mainProduct.price;
+  const accessoryPrice = bundle.accessory.discount_price ?? bundle.accessory.price;
+  const oldTotalPrice = mainPrice + accessoryPrice;
+  const savings = oldTotalPrice - bundle.bundle_price;
+
+  const handleAddBundle = () => {
+    addBundle(mainProduct, bundle.accessory, bundle.bundle_price);
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 3000);
+  };
+
+  return (
+    <div className="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-3xl p-6 md:p-8">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+        
+        <div className="flex-grow">
+          <div className="inline-block bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
+            وفر {savings} د.ك مع هذه الحزمة
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">اشترِ معاً ووفر أكثر!</h3>
+          <p className="text-gray-600 mb-6">احصل على {bundle.accessory.title} بسعر خيالي عند شرائه مع هذا الهاتف.</p>
+          
+          <div className="flex items-center gap-4">
+            {/* صورة الهاتف */}
+            <div className="w-20 h-20 bg-white rounded-xl border border-gray-200 p-2 relative">
+              <Image src={mainProduct.image_urls?.[0] || 'https://placehold.co/100'} alt="phone" fill className="object-contain p-2" />
+            </div>
+            
+            <Plus className="w-6 h-6 text-blue-400" />
+            
+            {/* صورة الإكسسوار */}
+            <div className="w-20 h-20 bg-white rounded-xl border border-gray-200 p-2 relative">
+              <Image src={bundle.accessory.image_urls?.[0] || 'https://placehold.co/100'} alt="accessory" fill className="object-contain p-2" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-sm text-center min-w-[250px]">
+          <div className="text-gray-400 line-through mb-1">بدلاً من {oldTotalPrice} د.ك</div>
+          <div className="text-3xl font-bold text-blue-700 mb-4">{bundle.bundle_price} د.ك</div>
+          
+          <button 
+            onClick={handleAddBundle}
+            disabled={isAdded}
+            className={`w-full font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 ${
+              isAdded ? "bg-green-500 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
+            }`}
+          >
+            {isAdded ? (
+              <><Check className="w-5 h-5" /> تمت الإضافة</>
+            ) : (
+              "إضافة الحزمة للسلة"
+            )}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/proxy.ts">
+// middleware.ts
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  // تهيئة الاستجابة
+  let supabaseResponse = NextResponse.next({ request });
+
+  // إنشاء عميل Supabase خاص بالـ Middleware
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // جلب بيانات المستخدم الحالي
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // التحقق: إذا كان المسار يبدأ بـ /admin وليس صفحة تسجيل الدخول
+  if (request.nextUrl.pathname.startsWith("/admin") && !request.nextUrl.pathname.startsWith("/admin/login")) {
+    // إذا لم يكن مسجلاً للدخول، اطرده لصفحة تسجيل الدخول
+    if (!user) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/admin/login";
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return supabaseResponse;
+}
+
+// تحديد المسارات التي يعمل عليها الـ Middleware (نتجاهل الصور والملفات الثابتة لتسريع الموقع)
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
+</file>
+
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+</file>
+
+<file path="AGENTS.md">
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+</file>
+
+<file path="CLAUDE.md">
+@AGENTS.md
+</file>
+
+<file path="cmd.md">
+npx repomix --ignore ".next/**, out/**, node_modules/**, public/**, package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb, .env*.local, .vercel/**, .turbo/**, coverage/**"
+</file>
+
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="pnpm-workspace.yaml">
+allowBuilds:
+  sharp: true
+  unrs-resolver: false
+</file>
+
+<file path="postcss.config.mjs">
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+</file>
+
+<file path="README.md">
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+</file>
 
 <file path="src/app/admin/layout.tsx">
 // src/app/admin/layout.tsx
@@ -209,6 +484,26 @@ export default async function AdminOrdersPage() {
 }
 </file>
 
+<file path="src/app/admin/products/new/page.tsx">
+// src/app/admin/products/new/page.tsx
+import AddProductForm from "@/domains/admin/components/AddProductForm";
+
+export default function NewProductPage() {
+  return (
+    <div className="max-w-3xl mx-auto space-y-8 pb-10">
+      <div className="border-b border-gray-200 pb-4">
+        <h1 className="text-3xl font-bold text-gray-900">إضافة منتج جديد</h1>
+        <p className="text-gray-500 mt-2">
+          قم بإدخال بيانات المنتج. سيقوم النظام تلقائياً بضغط الصورة المرفوعة لضمان سرعة الموقع.
+        </p>
+      </div>
+      
+      <AddProductForm />
+    </div>
+  );
+}
+</file>
+
 <file path="src/app/admin/trade-in/page.tsx">
 // src/app/admin/trade-in/page.tsx
 import { getAdminTradeInRequests } from "@/domains/admin/trade-in/actions";
@@ -236,6 +531,35 @@ export default async function AdminTradeInPage() {
       <TradeInList initialRequests={requests || []} />
     </div>
   );
+}
+</file>
+
+<file path="src/app/globals.css">
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
 }
 </file>
 
@@ -342,6 +666,91 @@ export default function TradeInPage() {
 }
 </file>
 
+<file path="src/domains/admin/actions.ts">
+// src/domains/admin/actions.ts
+"use server";
+
+import { createClient } from "@supabase/supabase-js";
+import sharp from "sharp";
+import { revalidatePath } from "next/cache";
+
+// نهيئ عميل بصلاحيات المدير لتخطي RLS بأمان داخل بيئة الخادم فقط
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function addProductAction(formData: FormData) {
+  try {
+    // 1. استخراج البيانات من النموذج
+    const title = formData.get("title") as string;
+    const price = parseFloat(formData.get("price") as string);
+    const discountRaw = formData.get("discount_price") as string;
+    const discountPrice = discountRaw ? parseFloat(discountRaw) : null;
+    const category = formData.get("category") as string;
+    const brand = formData.get("brand") as string;
+    const description = formData.get("description") as string;
+    const file = formData.get("image") as File;
+
+    let imageUrl = null;
+
+    // 2. معالجة الصورة باستخدام Sharp
+    if (file && file.size > 0) {
+      // تحويل الملف إلى Buffer لمعالجته
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      // ضغط الصورة، وتعديل مقاسها، وتحويلها لـ WebP
+      const processedImage = await sharp(buffer)
+        .resize(800, 800, { fit: "inside", withoutEnlargement: true }) // حد أقصى للأبعاد
+        .webp({ quality: 80 }) // ضغط الجودة لتقليل الحجم
+        .toBuffer();
+
+      // إنشاء اسم فريد للصورة
+      const fileName = `product-${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+
+      // رفع الصورة لـ Supabase Storage
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from("product-images")
+        .upload(fileName, processedImage, {
+          contentType: "image/webp",
+        });
+
+      if (uploadError) throw new Error("فشل رفع الصورة: " + uploadError.message);
+
+      // جلب الرابط العام للصورة
+      const { data: publicUrlData } = supabaseAdmin.storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+
+      imageUrl = publicUrlData.publicUrl;
+    }
+
+    // 3. حفظ بيانات المنتج في قاعدة البيانات
+    const { error: dbError } = await supabaseAdmin.from("products").insert({
+      title,
+      price,
+      discount_price: discountPrice,
+      category,
+      brand,
+      description,
+      image_urls: imageUrl ? [imageUrl] : [],
+    });
+
+    if (dbError) throw new Error("فشل حفظ المنتج: " + dbError.message);
+
+    // 4. تحديث الكاش لكي يظهر المنتج فوراً للعملاء
+    revalidatePath("/");
+    revalidatePath("/offers");
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Add Product Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+</file>
+
 <file path="src/domains/admin/auth/actions.ts">
 // src/domains/admin/auth/actions.ts
 "use server";
@@ -371,6 +780,106 @@ export async function logoutAction() {
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();
   return { success: true };
+}
+</file>
+
+<file path="src/domains/admin/components/AddProductForm.tsx">
+// src/domains/admin/components/AddProductForm.tsx
+"use client";
+
+import { useState, useRef } from "react";
+import { addProductAction } from "../actions";
+import { ImagePlus, Loader2, CheckCircle2 } from "lucide-react";
+
+export default function AddProductForm() {
+  const [isPending, setIsPending] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+    setStatus({ type: null, message: "" });
+
+    const formData = new FormData(e.currentTarget);
+    const result = await addProductAction(formData);
+
+    if (result.success) {
+      setStatus({ type: "success", message: "تمت إضافة المنتج ومعالجة الصورة بنجاح!" });
+      formRef.current?.reset(); // تفريغ الحقول بعد النجاح
+    } else {
+      setStatus({ type: "error", message: result.error || "حدث خطأ غير معروف." });
+    }
+    
+    setIsPending(false);
+  };
+
+  return (
+    <form ref={formRef} onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+      
+      {status.type && (
+        <div className={`p-4 rounded-xl flex items-center gap-3 ${status.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+          {status.type === "success" && <CheckCircle2 className="w-5 h-5" />}
+          <p className="font-medium">{status.message}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">اسم المنتج</label>
+          <input type="text" name="title" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: iPhone 15" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">العلامة التجارية</label>
+          <input type="text" name="brand" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: Apple" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">السعر (د.ك)</label>
+          <input type="number" step="0.01" name="price" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">سعر التخفيض (اختياري)</label>
+          <input type="number" step="0.01" name="discount_price" className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">القسم</label>
+        <select name="category" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="phone">هواتف</option>
+          <option value="accessory">إكسسوارات</option>
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">الوصف</label>
+        <textarea name="description" rows={4} className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="اكتب وصفاً مفصلاً للمنتج..."></textarea>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">صورة المنتج</label>
+        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors">
+          <input type="file" name="image" accept="image/*" required className="hidden" id="product-image" />
+          <label htmlFor="product-image" className="cursor-pointer flex flex-col items-center gap-2">
+            <ImagePlus className="w-10 h-10 text-gray-400" />
+            <span className="text-sm text-gray-600">اضغط هنا لاختيار صورة من جهازك</span>
+            <span className="text-xs text-gray-400">سيتم ضغطها وتصغيرها تلقائياً</span>
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2">
+        {isPending ? (
+          <>
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>جاري الرفع والمعالجة...</span>
+          </>
+        ) : (
+          "إضافة المنتج"
+        )}
+      </button>
+    </form>
+  );
 }
 </file>
 
@@ -832,464 +1341,6 @@ export async function updateTradeInStatus(requestId: string, newStatus: string, 
 }
 </file>
 
-<file path="src/domains/trade-in/actions.ts">
-// src/domains/trade-in/actions.ts
-"use server";
-
-import { createServerSupabaseClient } from "@/lib/supabase-server";
-
-interface TradeInRequestData {
-  customer_name: string;
-  customer_phone: string;
-  device_model: string;
-  device_condition: string;
-}
-
-export async function createTradeInRequest(data: TradeInRequestData) {
-  const supabase = await createServerSupabaseClient();
-
-  try {
-    const { error } = await supabase
-      .from("trade_in_requests")
-      .insert({
-        customer_name: data.customer_name,
-        customer_phone: data.customer_phone,
-        device_model: data.device_model,
-        device_condition: data.device_condition,
-        status: "pending",
-      });
-
-    if (error) {
-      throw new Error("فشل إرسال الطلب: " + error.message);
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    console.error("Trade-In Error:", error);
-    return { success: false, error: error.message };
-  }
-}
-</file>
-
-<file path="src/middleware.ts">
-// middleware.ts
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
-
-export async function middleware(request: NextRequest) {
-  // تهيئة الاستجابة
-  let supabaseResponse = NextResponse.next({ request });
-
-  // إنشاء عميل Supabase خاص بالـ Middleware
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  // جلب بيانات المستخدم الحالي
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // التحقق: إذا كان المسار يبدأ بـ /admin وليس صفحة تسجيل الدخول
-  if (request.nextUrl.pathname.startsWith("/admin") && !request.nextUrl.pathname.startsWith("/admin/login")) {
-    // إذا لم يكن مسجلاً للدخول، اطرده لصفحة تسجيل الدخول
-    if (!user) {
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = "/admin/login";
-      return NextResponse.redirect(loginUrl);
-    }
-  }
-
-  return supabaseResponse;
-}
-
-// تحديد المسارات التي يعمل عليها الـ Middleware (نتجاهل الصور والملفات الثابتة لتسريع الموقع)
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};
-</file>
-
-<file path=".gitignore">
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-</file>
-
-<file path="AGENTS.md">
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
-</file>
-
-<file path="CLAUDE.md">
-@AGENTS.md
-</file>
-
-<file path="eslint.config.mjs">
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
-
-export default eslintConfig;
-</file>
-
-<file path="pnpm-workspace.yaml">
-allowBuilds:
-  sharp: true
-  unrs-resolver: false
-</file>
-
-<file path="postcss.config.mjs">
-const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-  },
-};
-
-export default config;
-</file>
-
-<file path="README.md">
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-</file>
-
-<file path="src/app/admin/products/new/page.tsx">
-// src/app/admin/products/new/page.tsx
-import AddProductForm from "@/domains/admin/components/AddProductForm";
-
-export default function NewProductPage() {
-  return (
-    <div className="max-w-3xl mx-auto space-y-8 pb-10">
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-3xl font-bold text-gray-900">إضافة منتج جديد</h1>
-        <p className="text-gray-500 mt-2">
-          قم بإدخال بيانات المنتج. سيقوم النظام تلقائياً بضغط الصورة المرفوعة لضمان سرعة الموقع.
-        </p>
-      </div>
-      
-      <AddProductForm />
-    </div>
-  );
-}
-</file>
-
-<file path="src/app/globals.css">
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-</file>
-
-<file path="src/domains/admin/actions.ts">
-// src/domains/admin/actions.ts
-"use server";
-
-import { createClient } from "@supabase/supabase-js";
-import sharp from "sharp";
-import { revalidatePath } from "next/cache";
-
-// نهيئ عميل بصلاحيات المدير لتخطي RLS بأمان داخل بيئة الخادم فقط
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function addProductAction(formData: FormData) {
-  try {
-    // 1. استخراج البيانات من النموذج
-    const title = formData.get("title") as string;
-    const price = parseFloat(formData.get("price") as string);
-    const discountRaw = formData.get("discount_price") as string;
-    const discountPrice = discountRaw ? parseFloat(discountRaw) : null;
-    const category = formData.get("category") as string;
-    const brand = formData.get("brand") as string;
-    const description = formData.get("description") as string;
-    const file = formData.get("image") as File;
-
-    let imageUrl = null;
-
-    // 2. معالجة الصورة باستخدام Sharp
-    if (file && file.size > 0) {
-      // تحويل الملف إلى Buffer لمعالجته
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      
-      // ضغط الصورة، وتعديل مقاسها، وتحويلها لـ WebP
-      const processedImage = await sharp(buffer)
-        .resize(800, 800, { fit: "inside", withoutEnlargement: true }) // حد أقصى للأبعاد
-        .webp({ quality: 80 }) // ضغط الجودة لتقليل الحجم
-        .toBuffer();
-
-      // إنشاء اسم فريد للصورة
-      const fileName = `product-${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
-
-      // رفع الصورة لـ Supabase Storage
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from("product-images")
-        .upload(fileName, processedImage, {
-          contentType: "image/webp",
-        });
-
-      if (uploadError) throw new Error("فشل رفع الصورة: " + uploadError.message);
-
-      // جلب الرابط العام للصورة
-      const { data: publicUrlData } = supabaseAdmin.storage
-        .from("product-images")
-        .getPublicUrl(fileName);
-
-      imageUrl = publicUrlData.publicUrl;
-    }
-
-    // 3. حفظ بيانات المنتج في قاعدة البيانات
-    const { error: dbError } = await supabaseAdmin.from("products").insert({
-      title,
-      price,
-      discount_price: discountPrice,
-      category,
-      brand,
-      description,
-      image_urls: imageUrl ? [imageUrl] : [],
-    });
-
-    if (dbError) throw new Error("فشل حفظ المنتج: " + dbError.message);
-
-    // 4. تحديث الكاش لكي يظهر المنتج فوراً للعملاء
-    revalidatePath("/");
-    revalidatePath("/offers");
-
-    return { success: true };
-  } catch (error: any) {
-    console.error("Add Product Error:", error);
-    return { success: false, error: error.message };
-  }
-}
-</file>
-
-<file path="src/domains/admin/components/AddProductForm.tsx">
-// src/domains/admin/components/AddProductForm.tsx
-"use client";
-
-import { useState, useRef } from "react";
-import { addProductAction } from "../actions";
-import { ImagePlus, Loader2, CheckCircle2 } from "lucide-react";
-
-export default function AddProductForm() {
-  const [isPending, setIsPending] = useState(false);
-  const [status, setStatus] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
-  const formRef = useRef<HTMLFormElement>(null);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsPending(true);
-    setStatus({ type: null, message: "" });
-
-    const formData = new FormData(e.currentTarget);
-    const result = await addProductAction(formData);
-
-    if (result.success) {
-      setStatus({ type: "success", message: "تمت إضافة المنتج ومعالجة الصورة بنجاح!" });
-      formRef.current?.reset(); // تفريغ الحقول بعد النجاح
-    } else {
-      setStatus({ type: "error", message: result.error || "حدث خطأ غير معروف." });
-    }
-    
-    setIsPending(false);
-  };
-
-  return (
-    <form ref={formRef} onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-      
-      {status.type && (
-        <div className={`p-4 rounded-xl flex items-center gap-3 ${status.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-          {status.type === "success" && <CheckCircle2 className="w-5 h-5" />}
-          <p className="font-medium">{status.message}</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">اسم المنتج</label>
-          <input type="text" name="title" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: iPhone 15" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">العلامة التجارية</label>
-          <input type="text" name="brand" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: Apple" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">السعر (د.ك)</label>
-          <input type="number" step="0.01" name="price" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">سعر التخفيض (اختياري)</label>
-          <input type="number" step="0.01" name="discount_price" className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">القسم</label>
-        <select name="category" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="phone">هواتف</option>
-          <option value="accessory">إكسسوارات</option>
-        </select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">الوصف</label>
-        <textarea name="description" rows={4} className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="اكتب وصفاً مفصلاً للمنتج..."></textarea>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">صورة المنتج</label>
-        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors">
-          <input type="file" name="image" accept="image/*" required className="hidden" id="product-image" />
-          <label htmlFor="product-image" className="cursor-pointer flex flex-col items-center gap-2">
-            <ImagePlus className="w-10 h-10 text-gray-400" />
-            <span className="text-sm text-gray-600">اضغط هنا لاختيار صورة من جهازك</span>
-            <span className="text-xs text-gray-400">سيتم ضغطها وتصغيرها تلقائياً</span>
-          </label>
-        </div>
-      </div>
-
-      <button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2">
-        {isPending ? (
-          <>
-            <Loader2 className="w-6 h-6 animate-spin" />
-            <span>جاري الرفع والمعالجة...</span>
-          </>
-        ) : (
-          "إضافة المنتج"
-        )}
-      </button>
-    </form>
-  );
-}
-</file>
-
 <file path="src/domains/cart/components/CheckoutForm.tsx">
 // src/domains/cart/components/CheckoutForm.tsx
 "use client";
@@ -1416,6 +1467,7 @@ export interface CartItem extends Product {
 interface CartState {
   items: CartItem[];
   addItem: (product: Product) => void;
+  addBundle: (mainProduct: Product, accessoryProduct: Product, bundlePrice: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
   getTotalItems: () => number;
@@ -1426,110 +1478,69 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       
-      // إضافة منتج للسلة
       addItem: (product) => {
         set((state) => {
           const existingItem = state.items.find((item) => item.id === product.id);
           if (existingItem) {
-            // إذا كان المنتج موجوداً مسبقاً، نزيد العدد فقط
             return {
               items: state.items.map((item) =>
                 item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
               ),
             };
           }
-          // إذا كان منتجاً جديداً، نضيفه بعدد 1
           return { items: [...state.items, { ...product, quantity: 1 }] };
         });
       },
 
-      // إزالة منتج من السلة
+      // الدالة الجديدة لإضافة حزمة (منتجين معاً بسعر مخفض)
+      addBundle: (mainProduct, accessoryProduct, bundlePrice) => {
+        set((state) => {
+          const mainPrice = mainProduct.discount_price ?? mainProduct.price;
+          // حساب السعر المتبقي للإكسسوار بعد خصم سعر الهاتف من إجمالي الحزمة
+          const accessoryBundlePrice = bundlePrice - mainPrice;
+
+          // تعديل الإكسسوار ليكون سعره هو السعر المخفض داخل الحزمة
+          const discountedAccessory = {
+            ...accessoryProduct,
+            discount_price: accessoryBundlePrice > 0 ? accessoryBundlePrice : 0,
+            title: `${accessoryProduct.title} (عرض الحزمة)`
+          };
+
+          // استخدام منطق الإضافة مرتين (للهاتف وللإكسسوار المخفض)
+          let newItems = [...state.items];
+          
+          // إضافة الهاتف
+          const existingMain = newItems.find((i) => i.id === mainProduct.id);
+          if (existingMain) existingMain.quantity += 1;
+          else newItems.push({ ...mainProduct, quantity: 1 });
+
+          // إضافة الإكسسوار المخفض (نجعل له ID مختلف قليلاً لكي لا يندمج مع الإكسسوار العادي لو تم طلبه لوحده)
+          const bundleAccId = `bundle-${accessoryProduct.id}`;
+          const existingAcc = newItems.find((i) => i.id === bundleAccId);
+          if (existingAcc) existingAcc.quantity += 1;
+          else newItems.push({ ...discountedAccessory, id: bundleAccId, quantity: 1 });
+
+          return { items: newItems };
+        });
+      },
+
       removeItem: (productId) => {
         set((state) => ({
           items: state.items.filter((item) => item.id !== productId),
         }));
       },
 
-      // إفراغ السلة بالكامل
       clearCart: () => set({ items: [] }),
 
-      // حساب إجمالي عدد المنتجات لعرضه في الترويسة
       getTotalItems: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0);
       },
     }),
     {
-      name: 'mobile-shop-cart', // اسم الملف في الـ LocalStorage
+      name: 'mobile-shop-cart',
     }
   )
 );
-</file>
-
-<file path="src/domains/orders/actions.ts">
-// src/domains/orders/actions.ts
-"use server";
-
-import { createClient } from "@supabase/supabase-js";
-import { CartItem } from "../cart/store";
-
-interface OrderData {
-  customer_name: string;
-  customer_phone: string;
-  delivery_method: "delivery" | "pickup";
-  address: string;
-  total_price: number;
-  items: CartItem[];
-}
-
-// نستخدم مفتاح المدير هنا لأن الطلب يتم من زائر، ونحن نحتاج لاسترجاع رقم الطلب
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function createOrderAction(data: OrderData) {
-  try {
-    // 1. إدراج الطلب الأساسي باستخدام مفتاح المدير
-    const { data: order, error: orderError } = await supabaseAdmin
-      .from("orders")
-      .insert({
-        customer_name: data.customer_name,
-        customer_phone: data.customer_phone,
-        delivery_method: data.delivery_method,
-        address: data.delivery_method === "delivery" ? data.address : null,
-        total_price: data.total_price,
-        status: "pending",
-      })
-      .select("id")
-      .single();
-
-    if (orderError || !order) {
-      throw new Error("فشل إنشاء الطلب: " + orderError?.message);
-    }
-
-    // 2. تجهيز مصفوفة تفاصيل الطلب (المنتجات)
-    const orderItems = data.items.map((item) => ({
-      order_id: order.id,
-      product_id: item.id,
-      quantity: item.quantity,
-      price_at_purchase: item.discount_price ?? item.price,
-    }));
-
-    // 3. إدراج المنتجات في جدول order_items
-    const { error: itemsError } = await supabaseAdmin
-      .from("order_items")
-      .insert(orderItems);
-
-    if (itemsError) {
-      throw new Error("فشل حفظ منتجات الطلب: " + itemsError.message);
-    }
-
-    return { success: true, orderId: order.id };
-  } catch (error: any) {
-    console.error("Create Order Error:", error);
-    return { success: false, error: error.message };
-  }
-}
 </file>
 
 <file path="src/domains/products/components/AddToCartButton.tsx">
@@ -1663,10 +1674,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { Product } from "./types";
 
+// 1. دالة جلب جميع المنتجات (للصفحة الرئيسية والعروض)
 export async function getProducts(): Promise<Product[]> {
   const supabase = await createServerSupabaseClient();
   
-  // جلب جميع المنتجات وترتيبها من الأحدث للأقدم
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -1678,10 +1689,9 @@ export async function getProducts(): Promise<Product[]> {
   }
 
   return data as Product[];
-
-  
 }
 
+// 2. دالة جلب منتج واحد (لصفحة تفاصيل المنتج)
 export async function getProductById(id: string): Promise<Product | null> {
   const supabase = await createServerSupabaseClient();
   
@@ -1697,6 +1707,23 @@ export async function getProductById(id: string): Promise<Product | null> {
   }
 
   return data as Product;
+}
+
+// 3. دالة جلب الحزم الذكية المرتبطة بالمنتج
+export async function getProductBundles(productId: string) {
+  const supabase = await createServerSupabaseClient();
+  
+  const { data, error } = await supabase
+    .from('bundles')
+    .select(`
+      id,
+      bundle_price,
+      accessory:accessory_product_id (*)
+    `)
+    .eq('main_product_id', productId);
+
+  if (error) return [];
+  return data;
 }
 </file>
 
@@ -1715,6 +1742,45 @@ export interface Product {
   specs: Record<string, any> | null;
   image_urls: string[] | null;
   created_at: string;
+}
+</file>
+
+<file path="src/domains/trade-in/actions.ts">
+// src/domains/trade-in/actions.ts
+"use server";
+
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+
+interface TradeInRequestData {
+  customer_name: string;
+  customer_phone: string;
+  device_model: string;
+  device_condition: string;
+}
+
+export async function createTradeInRequest(data: TradeInRequestData) {
+  const supabase = await createServerSupabaseClient();
+
+  try {
+    const { error } = await supabase
+      .from("trade_in_requests")
+      .insert({
+        customer_name: data.customer_name,
+        customer_phone: data.customer_phone,
+        device_model: data.device_model,
+        device_condition: data.device_condition,
+        status: "pending",
+      });
+
+    if (error) {
+      throw new Error("فشل إرسال الطلب: " + error.message);
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Trade-In Error:", error);
+    return { success: false, error: error.message };
+  }
 }
 </file>
 
@@ -1873,94 +1939,6 @@ export default withPWA(nextConfig);
 }
 </file>
 
-<file path="src/app/cart/page.tsx">
-// src/app/cart/page.tsx
-"use client";
-
-import { useCartStore } from "@/domains/cart/store";
-import Image from "next/image";
-import Link from "next/link";
-import { Trash2, ArrowRight } from "lucide-react";
-import { useEffect, useState } from "react";
-import CheckoutForm from "@/domains/cart/components/CheckoutForm";
-
-export default function CartPage() {
-  const { items, removeItem } = useCartStore();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
-  const totalPrice = items.reduce((total, item) => {
-    const price = item.discount_price ?? item.price;
-    return total + (price * item.quantity);
-  }, 0);
-
-  if (items.length === 0) {
-    return (
-      <div className="text-center py-20">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">السلة فارغة</h1>
-        <p className="text-gray-500 mb-8">لم تقم بإضافة أي منتجات إلى سلة المشتريات بعد.</p>
-        <Link href="/" className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-          <ArrowRight className="w-5 h-5" />
-          <span>العودة للتسوق</span>
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-4xl mx-auto pb-12">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8 border-r-4 border-blue-600 pr-3">مراجعة الطلب</h1>
-      
-      {/* قائمة المنتجات في السلة */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        {items.map((item) => (
-          <div key={item.id} className="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0">
-            <div className="relative w-20 h-20 bg-gray-50 rounded-lg overflow-hidden shrink-0">
-              <Image 
-                src={item.image_urls?.[0] || 'https://placehold.co/100'} 
-                alt={item.title} 
-                fill 
-                sizes="80px" 
-                className="object-cover" 
-              />
-            </div>
-            <div className="flex-grow">
-              <Link href={`/product/${item.id}`} className="font-semibold text-gray-800 hover:text-blue-600 line-clamp-1">
-                {item.title}
-              </Link>
-              <div className="text-sm text-gray-500 mt-1">الكمية: {item.quantity}</div>
-            </div>
-            <div className="font-bold text-gray-900">
-              {(item.discount_price ?? item.price) * item.quantity} د.ك
-            </div>
-            <button 
-              onClick={() => removeItem(item.id)}
-              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          </div>
-        ))}
-        
-        <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-center text-lg">
-          <span className="font-bold text-gray-700">المجموع الكلي:</span>
-          <span className="text-2xl font-bold text-blue-700">{totalPrice} د.ك</span>
-        </div>
-      </div>
-
-      {/* نموذج إتمام الطلب */}
-      <CheckoutForm />
-      
-    </div>
-  );
-}
-</file>
-
 <file path="src/app/layout.tsx">
 // src/app/layout.tsx
 import type { Metadata, Viewport } from "next";
@@ -2090,19 +2068,26 @@ export default async function HomePage() {
 
 <file path="src/app/product/[id]/page.tsx">
 // src/app/product/[id]/page.tsx
-import { getProductById } from "@/domains/products/queries";
+import { getProductById, getProductBundles } from "@/domains/products/queries";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { ShieldCheck, Truck } from "lucide-react";
 import AddToCartButton from "@/domains/products/components/AddToCartButton";
+import SmartBundle from "@/domains/products/components/SmartBundle";
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
+  
+  // جلب تفاصيل المنتج
   const product = await getProductById(resolvedParams.id);
 
   if (!product) {
     notFound();
   }
+
+  // جلب الحزم الذكية المرتبطة بهذا المنتج (إن وجدت)
+  const bundles = await getProductBundles(product.id);
+  const firstBundle = bundles?.[0]; // نأخذ العرض الأول فقط لعرضه
 
   const imageUrl = product.image_urls && product.image_urls.length > 0 
     ? product.image_urls[0] 
@@ -2111,82 +2096,250 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
   const hasDiscount = product.discount_price !== null && product.discount_price < product.price;
 
   return (
-    <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        
-        {/* قسم الصورة */}
-        <div className="relative aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden border border-gray-100">
-          {hasDiscount && (
-            <div className="absolute top-4 right-4 z-10 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-lg shadow-md">
-              تخفيض خاص
-            </div>
-          )}
-          <Image
-            src={imageUrl}
-            alt={product.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-            priority
-          />
-        </div>
-
-        {/* قسم التفاصيل */}
-        <div className="flex flex-col">
-          <div className="mb-2 text-blue-600 font-semibold text-sm">
-            {product.brand}
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.title}</h1>
+    <div className="space-y-8">
+      {/* البطاقة الرئيسية للمنتج */}
+      <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           
-          <div className="mb-6 pb-6 border-b border-gray-100">
-            {hasDiscount ? (
-              <div className="flex items-end gap-3">
-                <span className="text-4xl font-bold text-red-600">{product.discount_price} د.ك</span>
-                <span className="text-lg text-gray-400 line-through mb-1">{product.price} د.ك</span>
+          {/* قسم الصورة */}
+          <div className="relative aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden border border-gray-100">
+            {hasDiscount && (
+              <div className="absolute top-4 right-4 z-10 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-lg shadow-md">
+                تخفيض خاص
               </div>
-            ) : (
-              <span className="text-4xl font-bold text-gray-900">{product.price} د.ك</span>
             )}
+            <Image
+              src={imageUrl}
+              alt={product.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
+            />
           </div>
 
-          <p className="text-gray-600 text-lg leading-relaxed mb-8">
-            {product.description || "لا يوجد وصف متاح لهذا المنتج."}
-          </p>
-
-          {/* المواصفات إن وجدت */}
-          {product.specs && (
-            <div className="mb-8 bg-gray-50 p-4 rounded-xl">
-              <h3 className="font-semibold text-gray-900 mb-3">المواصفات الرئيسية:</h3>
-              <ul className="space-y-2">
-                {Object.entries(product.specs).map(([key, value]) => (
-                  <li key={key} className="flex items-center text-gray-600 text-sm">
-                    <span className="w-24 font-medium text-gray-800 capitalize">{key}:</span>
-                    <span>{String(value)}</span>
-                  </li>
-                ))}
-              </ul>
+          {/* قسم التفاصيل */}
+          <div className="flex flex-col">
+            <div className="mb-2 text-blue-600 font-semibold text-sm">
+              {product.brand}
             </div>
-          )}
-
-          {/* أزرار الإجراءات والمميزات */}
-          <div className="mt-auto space-y-4">
-            {/* هنا قمنا بوضع الزر التفاعلي الجديد */}
-            <AddToCartButton product={product} />
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.title}</h1>
             
-            <div className="flex items-center justify-center gap-6 text-sm text-gray-500 pt-4">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-5 h-5 text-green-500" />
-                <span>ضمان الوكيل</span>
+            <div className="mb-6 pb-6 border-b border-gray-100">
+              {hasDiscount ? (
+                <div className="flex items-end gap-3">
+                  <span className="text-4xl font-bold text-red-600">{product.discount_price} د.ك</span>
+                  <span className="text-lg text-gray-400 line-through mb-1">{product.price} د.ك</span>
+                </div>
+              ) : (
+                <span className="text-4xl font-bold text-gray-900">{product.price} د.ك</span>
+              )}
+            </div>
+
+            <p className="text-gray-600 text-lg leading-relaxed mb-8">
+              {product.description || "لا يوجد وصف متاح لهذا المنتج."}
+            </p>
+
+            {/* المواصفات إن وجدت */}
+            {product.specs && (
+              <div className="mb-8 bg-gray-50 p-4 rounded-xl">
+                <h3 className="font-semibold text-gray-900 mb-3">المواصفات الرئيسية:</h3>
+                <ul className="space-y-2">
+                  {Object.entries(product.specs).map(([key, value]) => (
+                    <li key={key} className="flex items-center text-gray-600 text-sm">
+                      <span className="w-24 font-medium text-gray-800 capitalize">{key}:</span>
+                      <span>{String(value)}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Truck className="w-5 h-5 text-blue-500" />
-                <span>توصيل سريع</span>
+            )}
+
+            {/* أزرار الإجراءات والمميزات */}
+            <div className="mt-auto space-y-4">
+              <AddToCartButton product={product} />
+              
+              <div className="flex items-center justify-center gap-6 text-sm text-gray-500 pt-4">
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-5 h-5 text-green-500" />
+                  <span>ضمان الوكيل</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Truck className="w-5 h-5 text-blue-500" />
+                  <span>توصيل سريع</span>
+                </div>
               </div>
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
+
+      {/* عرض الحزمة الذكية إن وجدت (تظهر أسفل البطاقة الرئيسية) */}
+      {firstBundle && firstBundle.accessory && (
+        <SmartBundle 
+          mainProduct={product} 
+          bundle={{
+            bundle_price: firstBundle.bundle_price,
+            accessory: firstBundle.accessory
+          }} 
+        />
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/orders/actions.ts">
+// src/domains/orders/actions.ts
+"use server";
+
+import { createClient } from "@supabase/supabase-js";
+import { CartItem } from "../cart/store";
+
+interface OrderData {
+  customer_name: string;
+  customer_phone: string;
+  delivery_method: "delivery" | "pickup";
+  address: string;
+  total_price: number;
+  items: CartItem[];
+}
+
+// نستخدم مفتاح المدير هنا لأن الطلب يتم من زائر، ونحن نحتاج لاسترجاع رقم الطلب
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function createOrderAction(data: OrderData) {
+  try {
+    // 1. إدراج الطلب الأساسي باستخدام مفتاح المدير
+    const { data: order, error: orderError } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        customer_name: data.customer_name,
+        customer_phone: data.customer_phone,
+        delivery_method: data.delivery_method,
+        address: data.delivery_method === "delivery" ? data.address : null,
+        total_price: data.total_price,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+
+    if (orderError || !order) {
+      throw new Error("فشل إنشاء الطلب: " + orderError?.message);
+    }
+
+    // 2. تجهيز مصفوفة تفاصيل الطلب (المنتجات)
+    const orderItems = data.items.map((item) => ({
+      order_id: order.id,
+      product_id: item.id,
+      quantity: item.quantity,
+      price_at_purchase: item.discount_price ?? item.price,
+    }));
+
+    // 3. إدراج المنتجات في جدول order_items
+    const { error: itemsError } = await supabaseAdmin
+      .from("order_items")
+      .insert(orderItems);
+
+    if (itemsError) {
+      throw new Error("فشل حفظ منتجات الطلب: " + itemsError.message);
+    }
+
+    return { success: true, orderId: order.id };
+  } catch (error: any) {
+    console.error("Create Order Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+</file>
+
+<file path="src/app/cart/page.tsx">
+// src/app/cart/page.tsx
+"use client";
+
+import { useCartStore } from "@/domains/cart/store";
+import Image from "next/image";
+import Link from "next/link";
+import { Trash2, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import CheckoutForm from "@/domains/cart/components/CheckoutForm";
+
+export default function CartPage() {
+  const { items, removeItem } = useCartStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  const totalPrice = items.reduce((total, item) => {
+    const price = item.discount_price ?? item.price;
+    return total + (price * item.quantity);
+  }, 0);
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">السلة فارغة</h1>
+        <p className="text-gray-500 mb-8">لم تقم بإضافة أي منتجات إلى سلة المشتريات بعد.</p>
+        <Link href="/" className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+          <ArrowRight className="w-5 h-5" />
+          <span>العودة للتسوق</span>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto pb-12">
+      <h1 className="text-2xl font-bold text-gray-900 mb-8 border-r-4 border-blue-600 pr-3">مراجعة الطلب</h1>
+      
+      {/* قائمة المنتجات في السلة */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        {items.map((item) => (
+          <div key={item.id} className="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0">
+            <div className="relative w-20 h-20 bg-gray-50 rounded-lg overflow-hidden shrink-0">
+              <Image 
+                src={item.image_urls?.[0] || 'https://placehold.co/100'} 
+                alt={item.title} 
+                fill 
+                sizes="80px" 
+                className="object-cover" 
+              />
+            </div>
+            <div className="flex-grow">
+              <Link href={`/product/${item.id}`} className="font-semibold text-gray-800 hover:text-blue-600 line-clamp-1">
+                {item.title}
+              </Link>
+              <div className="text-sm text-gray-500 mt-1">الكمية: {item.quantity}</div>
+            </div>
+            <div className="font-bold text-gray-900">
+              {(item.discount_price ?? item.price) * item.quantity} د.ك
+            </div>
+            <button 
+              onClick={() => removeItem(item.id)}
+              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
+        ))}
+        
+        <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-center text-lg">
+          <span className="font-bold text-gray-700">المجموع الكلي:</span>
+          <span className="text-2xl font-bold text-blue-700">{totalPrice} د.ك</span>
+        </div>
+      </div>
+
+      {/* نموذج إتمام الطلب */}
+      <CheckoutForm />
+      
     </div>
   );
 }
