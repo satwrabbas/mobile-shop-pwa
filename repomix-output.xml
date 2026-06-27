@@ -1,0 +1,2246 @@
+This file is a merged representation of a subset of the codebase, containing files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching these patterns are excluded: .next/**, out/**, node_modules/**, public/**, package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb, .env*.local, .vercel/**, .turbo/**, coverage/**
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.gitignore
+AGENTS.md
+CLAUDE.md
+eslint.config.mjs
+next.config.ts
+package.json
+pnpm-workspace.yaml
+postcss.config.mjs
+README.md
+src/app/admin/layout.tsx
+src/app/admin/login/page.tsx
+src/app/admin/orders/page.tsx
+src/app/admin/products/new/page.tsx
+src/app/admin/trade-in/page.tsx
+src/app/cart/page.tsx
+src/app/favicon.ico
+src/app/globals.css
+src/app/layout.tsx
+src/app/offers/page.tsx
+src/app/page.tsx
+src/app/product/[id]/page.tsx
+src/app/trade-in/page.tsx
+src/domains/admin/actions.ts
+src/domains/admin/auth/actions.ts
+src/domains/admin/components/AddProductForm.tsx
+src/domains/admin/components/AdminNav.tsx
+src/domains/admin/components/OrdersList.tsx
+src/domains/admin/components/TradeInList.tsx
+src/domains/admin/orders/actions.ts
+src/domains/admin/trade-in/actions.ts
+src/domains/cart/components/CheckoutForm.tsx
+src/domains/cart/store.ts
+src/domains/orders/actions.ts
+src/domains/products/components/AddToCartButton.tsx
+src/domains/products/components/ProductCard.tsx
+src/domains/products/queries.ts
+src/domains/products/types.ts
+src/domains/trade-in/actions.ts
+src/lib/supabase-server.ts
+src/lib/supabase.ts
+src/middleware.ts
+src/shared/components/Header.tsx
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="src/app/admin/layout.tsx">
+// src/app/admin/layout.tsx
+import AdminNav from "@/domains/admin/components/AdminNav";
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen">
+      <AdminNav />
+      {/* هنا سيتم عرض محتوى صفحات الإدارة (الطلبات، إضافة منتج، الخ) */}
+      <main>{children}</main>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/admin/login/page.tsx">
+// src/app/admin/login/page.tsx
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { loginAction } from "@/domains/admin/auth/actions";
+import { Lock, Loader2 } from "lucide-react";
+
+export default function AdminLoginPage() {
+  const [error, setError] = useState("");
+  const [isPending, setIsPending] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+    const result = await loginAction(formData);
+
+    if (result.success) {
+      // إعادة التوجيه للوحة الطلبات عند النجاح
+      router.push("/admin/orders");
+      router.refresh();
+    } else {
+      setError(result.error || "حدث خطأ ما");
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <div className="min-h-[70vh] flex items-center justify-center">
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">لوحة تحكم الإدارة</h1>
+          <p className="text-gray-500 mt-2">قم بتسجيل الدخول للمتابعة</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium text-center">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">البريد الإلكتروني</label>
+            <input type="email" name="email" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-left" dir="ltr" placeholder="admin@example.com" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">كلمة المرور</label>
+            <input type="password" name="password" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-left" dir="ltr" placeholder="••••••••" />
+          </div>
+
+          <button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3.5 rounded-xl transition-colors flex justify-center items-center gap-2 mt-4">
+            {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "تسجيل الدخول"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/admin/orders/page.tsx">
+// src/app/admin/orders/page.tsx
+import { getAdminOrders } from "@/domains/admin/orders/actions";
+import OrdersList from "@/domains/admin/components/OrdersList";
+
+// نوقف الكاش لهذه الصفحة لكي يرى المدير أحدث الطلبات عند تحديث الصفحة
+export const revalidate = 0;
+
+export default async function AdminOrdersPage() {
+  const { orders } = await getAdminOrders();
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8 pb-10">
+      <div className="border-b border-gray-200 pb-4 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">إدارة الطلبات</h1>
+          <p className="text-gray-500 mt-2">
+            متابعة طلبات العملاء وتحديث حالتها.
+          </p>
+        </div>
+        <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-bold text-sm">
+          إجمالي الطلبات: {orders?.length || 0}
+        </div>
+      </div>
+      
+      <OrdersList initialOrders={orders || []} />
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/admin/trade-in/page.tsx">
+// src/app/admin/trade-in/page.tsx
+import { getAdminTradeInRequests } from "@/domains/admin/trade-in/actions";
+import TradeInList from "@/domains/admin/components/TradeInList";
+
+export const revalidate = 0;
+
+export default async function AdminTradeInPage() {
+  const { requests } = await getAdminTradeInRequests();
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8 pb-10">
+      <div className="border-b border-gray-200 pb-4 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">طلبات الاستبدال</h1>
+          <p className="text-gray-500 mt-2">
+            مراجعة أجهزة العملاء القديمة وتسعيرها وتحديث حالتها.
+          </p>
+        </div>
+        <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-bold text-sm">
+          إجمالي الطلبات: {requests?.length || 0}
+        </div>
+      </div>
+      
+      <TradeInList initialRequests={requests || []} />
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/trade-in/page.tsx">
+// src/app/trade-in/page.tsx
+"use client";
+
+import { useState } from "react";
+import { createTradeInRequest } from "@/domains/trade-in/actions";
+import { Loader2, CheckCircle2, RefreshCw } from "lucide-react";
+import Link from "next/link";
+
+export default function TradeInPage() {
+  const [isPending, setIsPending] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+
+    const formData = new FormData(e.currentTarget);
+    
+    const result = await createTradeInRequest({
+      customer_name: formData.get("customer_name") as string,
+      customer_phone: formData.get("customer_phone") as string,
+      device_model: formData.get("device_model") as string,
+      device_condition: formData.get("device_condition") as string,
+    });
+
+    if (result.success) {
+      setIsSuccess(true);
+    } else {
+      alert("حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى.");
+    }
+    
+    setIsPending(false);
+  };
+
+  if (isSuccess) {
+    return (
+      <div className="max-w-2xl mx-auto text-center bg-white rounded-3xl p-10 shadow-sm border border-green-100 mt-10">
+        <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">تم استلام طلبك بنجاح!</h2>
+        <p className="text-gray-600 mb-8 text-lg">
+          سيقوم فريقنا بتقييم جهازك والتواصل معك في أقرب وقت لتقديم أفضل سعر استبدال.
+        </p>
+        <Link href="/" className="inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition-colors">
+          العودة للتسوق
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-8">
+      <div className="text-center space-y-4 bg-blue-50 rounded-3xl p-8 border border-blue-100">
+        <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+        <h1 className="text-3xl font-bold text-gray-900">استبدال الأجهزة القديمة</h1>
+        <p className="text-gray-600 text-lg">
+          هل ترغب في ترقية هاتفك؟ املأ النموذج أدناه وسنقوم بتقييم جهازك القديم وإعطائك خصماً لاستبداله بجهاز جديد من متجرنا.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">الاسم الكريم</label>
+            <input type="text" name="customer_name" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="أدخل اسمك" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">رقم الهاتف</label>
+            <input type="tel" name="customer_phone" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: 90000000" />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">نوع الجهاز وموديله (الجهاز القديم)</label>
+          <input type="text" name="device_model" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: iPhone 13 Pro Max" />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">حالة الجهاز</label>
+          <select name="device_condition" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="ممتاز (كالجديد)">ممتاز (كالجديد)</option>
+            <option value="جيد (خدوش بسيطة)">جيد (خدوش بسيطة)</option>
+            <option value="متوسط (خدوش واضحة)">متوسط (خدوش واضحة)</option>
+            <option value="شاشة مكسورة">شاشة مكسورة ولكن يعمل</option>
+          </select>
+        </div>
+
+        <button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2">
+          {isPending ? (
+            <>
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <span>جاري إرسال الطلب...</span>
+            </>
+          ) : (
+            "إرسال الطلب للتقييم"
+          )}
+        </button>
+      </form>
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/admin/auth/actions.ts">
+// src/domains/admin/auth/actions.ts
+"use server";
+
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+
+export async function loginAction(formData: FormData) {
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  const supabase = await createServerSupabaseClient();
+
+  // محاولة تسجيل الدخول
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    return { success: false, error: "البريد الإلكتروني أو كلمة المرور غير صحيحة." };
+  }
+
+  return { success: true };
+}
+
+export async function logoutAction() {
+  const supabase = await createServerSupabaseClient();
+  await supabase.auth.signOut();
+  return { success: true };
+}
+</file>
+
+<file path="src/domains/admin/components/AdminNav.tsx">
+// src/domains/admin/components/AdminNav.tsx
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { logoutAction } from "../auth/actions";
+import { Package, RefreshCw, PlusCircle, LogOut } from "lucide-react";
+
+export default function AdminNav() {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // إخفاء الشريط إذا كنا في صفحة تسجيل الدخول
+  if (pathname === "/admin/login") {
+    return null;
+  }
+
+  const handleLogout = async () => {
+    await logoutAction();
+    router.push("/admin/login");
+    router.refresh();
+  };
+
+  const navLinks = [
+    { name: "الطلبات", href: "/admin/orders", icon: <Package className="w-5 h-5" /> },
+    { name: "طلبات الاستبدال", href: "/admin/trade-in", icon: <RefreshCw className="w-5 h-5" /> },
+    { name: "إضافة منتج", href: "/admin/products/new", icon: <PlusCircle className="w-5 h-5" /> },
+  ];
+
+  return (
+    <div className="bg-gray-900 text-white rounded-2xl p-4 mb-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+      <div className="flex items-center gap-2">
+        <div className="bg-blue-600 p-2 rounded-lg">
+          <Package className="w-6 h-6" />
+        </div>
+        <span className="font-bold text-lg hidden md:block">لوحة الإدارة</span>
+      </div>
+
+      <nav className="flex items-center gap-2 md:gap-4 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
+                isActive 
+                  ? "bg-blue-600 text-white" 
+                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+              }`}
+            >
+              {link.icon}
+              <span>{link.name}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <button 
+        onClick={handleLogout}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors ml-auto md:ml-0"
+      >
+        <LogOut className="w-5 h-5" />
+        <span className="hidden md:inline">تسجيل الخروج</span>
+      </button>
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/admin/components/OrdersList.tsx">
+// src/domains/admin/components/OrdersList.tsx
+"use client";
+
+import { useState } from "react";
+import { updateOrderStatus } from "../orders/actions";
+import { ChevronDown, ChevronUp, MapPin, Phone, User, Package, Clock, CheckCircle, XCircle } from "lucide-react";
+
+// تعريف مبسط لشكل البيانات القادمة من الاستعلام
+type Order = any; 
+
+export default function OrdersList({ initialOrders }: { initialOrders: Order[] }) {
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    setLoadingId(orderId);
+    const result = await updateOrderStatus(orderId, newStatus);
+    
+    if (result.success) {
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    } else {
+      alert("حدث خطأ أثناء تحديث الحالة");
+    }
+    setLoadingId(null);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending': return <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><Clock className="w-3 h-3"/> قيد الانتظار</span>;
+      case 'completed': return <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3"/> مكتمل</span>;
+      case 'cancelled': return <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><XCircle className="w-3 h-3"/> ملغي</span>;
+      default: return <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-bold">{status}</span>;
+    }
+  };
+
+  if (orders.length === 0) {
+    return <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 text-gray-500">لا توجد طلبات حتى الآن.</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {orders.map((order) => (
+        <div key={order.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all">
+          
+          {/* رأس البطاقة (الجزء الظاهر دائماً) */}
+          <div 
+            onClick={() => toggleExpand(order.id)}
+            className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-100 p-3 rounded-xl text-blue-600">
+                <Package className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">{order.customer_name}</h3>
+                <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString("ar-EG")} - {order.total_price} د.ك</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+              {getStatusBadge(order.status)}
+              {expandedId === order.id ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+            </div>
+          </div>
+
+          {/* تفاصيل البطاقة (تظهر عند التمدد) */}
+          {expandedId === order.id && (
+            <div className="p-5 border-t border-gray-100 bg-gray-50/50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* معلومات العميل */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">بيانات العميل</h4>
+                  <p className="flex items-center gap-2 text-sm text-gray-600"><User className="w-4 h-4 text-blue-500"/> {order.customer_name}</p>
+                  <p className="flex items-center gap-2 text-sm text-gray-600"><Phone className="w-4 h-4 text-blue-500"/> {order.customer_phone}</p>
+                  <p className="flex items-center gap-2 text-sm text-gray-600">
+                    <MapPin className="w-4 h-4 text-blue-500"/> 
+                    {order.delivery_method === 'delivery' ? order.address : 'استلام من المحل'}
+                  </p>
+                </div>
+
+                {/* المنتجات المطلوبة */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">المنتجات</h4>
+                  <ul className="space-y-2">
+                    {order.order_items.map((item: any, index: number) => (
+                      <li key={index} className="flex justify-between text-sm text-gray-600">
+                        <span>{item.quantity}x {item.products?.title || 'منتج محذوف'}</span>
+                        <span className="font-medium">{item.price_at_purchase} د.ك</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="pt-2 flex justify-between font-bold text-gray-900">
+                    <span>الإجمالي:</span>
+                    <span>{order.total_price} د.ك</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* أزرار الإجراءات */}
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button 
+                  disabled={loadingId === order.id || order.status === 'completed'}
+                  onClick={() => handleStatusChange(order.id, 'completed')}
+                  className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                >
+                  تحديد كمكتمل
+                </button>
+                <button 
+                  disabled={loadingId === order.id || order.status === 'cancelled'}
+                  onClick={() => handleStatusChange(order.id, 'cancelled')}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                >
+                  إلغاء الطلب
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/admin/components/TradeInList.tsx">
+// src/domains/admin/components/TradeInList.tsx
+"use client";
+
+import { useState } from "react";
+import { updateTradeInStatus } from "../trade-in/actions";
+import { ChevronDown, ChevronUp, Phone, User, Smartphone, Clock, CheckCircle, FileText, BadgeDollarSign } from "lucide-react";
+
+type TradeInRequest = any;
+
+export default function TradeInList({ initialRequests }: { initialRequests: TradeInRequest[] }) {
+  const [requests, setRequests] = useState<TradeInRequest[]>(initialRequests);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [estimatedValue, setEstimatedValue] = useState<string>("");
+
+  const toggleExpand = (id: string, currentVal: number | null) => {
+    setExpandedId(expandedId === id ? null : id);
+    setEstimatedValue(currentVal ? currentVal.toString() : ""); // تعبئة السعر السابق إن وجد
+  };
+
+  const handleStatusChange = async (requestId: string, newStatus: string) => {
+    setLoadingId(requestId);
+    
+    // تحويل القيمة المدخلة إلى رقم
+    const val = estimatedValue ? parseFloat(estimatedValue) : undefined;
+    
+    const result = await updateTradeInStatus(requestId, newStatus, val);
+    
+    if (result.success) {
+      setRequests(requests.map(r => 
+        r.id === requestId 
+          ? { ...r, status: newStatus, estimated_value: val !== undefined ? val : r.estimated_value } 
+          : r
+      ));
+    } else {
+      alert("حدث خطأ أثناء تحديث الحالة");
+    }
+    setLoadingId(null);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending': return <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><Clock className="w-3 h-3"/> قيد المراجعة</span>;
+      case 'reviewed': return <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><FileText className="w-3 h-3"/> تم التقييم</span>;
+      case 'completed': return <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3"/> مكتمل</span>;
+      default: return <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-bold">{status}</span>;
+    }
+  };
+
+  if (requests.length === 0) {
+    return <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 text-gray-500">لا توجد طلبات استبدال حتى الآن.</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {requests.map((request) => (
+        <div key={request.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all">
+          
+          <div 
+            onClick={() => toggleExpand(request.id, request.estimated_value)}
+            className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-50 p-3 rounded-xl text-blue-600">
+                <Smartphone className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">{request.customer_name}</h3>
+                <p className="text-sm text-gray-500">{request.device_model}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+              {getStatusBadge(request.status)}
+              {expandedId === request.id ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+            </div>
+          </div>
+
+          {expandedId === request.id && (
+            <div className="p-5 border-t border-gray-100 bg-gray-50/50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">بيانات التواصل</h4>
+                  <p className="flex items-center gap-2 text-sm text-gray-600"><User className="w-4 h-4 text-blue-500"/> {request.customer_name}</p>
+                  <p className="flex items-center gap-2 text-sm text-gray-600"><Phone className="w-4 h-4 text-blue-500"/> {request.customer_phone}</p>
+                  <p className="flex items-center gap-2 text-sm text-gray-400 mt-2">
+                    تاريخ الطلب: {new Date(request.created_at).toLocaleDateString("ar-EG")}
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">تفاصيل الجهاز</h4>
+                  <p className="text-sm text-gray-600"><span className="font-medium">الموديل:</span> {request.device_model}</p>
+                  <p className="text-sm text-gray-600"><span className="font-medium">الحالة:</span> {request.device_condition}</p>
+                  {request.estimated_value && (
+                    <p className="text-sm font-bold text-green-600 flex items-center gap-1">
+                      <BadgeDollarSign className="w-4 h-4" /> 
+                      السعر التقديري: {request.estimated_value} د.ك
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* قسم التقييم وتحديث الحالة */}
+              <div className="bg-white p-4 rounded-xl border border-gray-200 flex flex-col md:flex-row gap-4 items-end">
+                <div className="w-full md:w-1/3 space-y-1">
+                  <label className="text-xs font-bold text-gray-700">السعر التقديري (د.ك)</label>
+                  <input 
+                    type="number" 
+                    value={estimatedValue}
+                    onChange={(e) => setEstimatedValue(e.target.value)}
+                    placeholder="مثال: 150"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                
+                <div className="flex gap-2 w-full md:w-auto">
+                  <button 
+                    disabled={loadingId === request.id || request.status === 'reviewed'}
+                    onClick={() => handleStatusChange(request.id, 'reviewed')}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors w-full md:w-auto"
+                  >
+                    تم التقييم
+                  </button>
+                  <button 
+                    disabled={loadingId === request.id || request.status === 'completed'}
+                    onClick={() => handleStatusChange(request.id, 'completed')}
+                    className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors w-full md:w-auto"
+                  >
+                    إنهاء المعاملة
+                  </button>
+                </div>
+              </div>
+              
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/admin/orders/actions.ts">
+// src/domains/admin/orders/actions.ts
+"use server";
+
+import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
+
+// استخدام مفتاح المدير لتخطي الحماية وجلب كل طلبات المتجر
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function getAdminOrders() {
+  try {
+    // جلب الطلبات بالإضافة إلى تفاصيل المنتجات المرتبطة بها
+    const { data, error } = await supabaseAdmin
+      .from("orders")
+      .select(`
+        *,
+        order_items (
+          quantity,
+          price_at_purchase,
+          products (
+            title
+          )
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    
+    return { success: true, orders: data };
+  } catch (error: any) {
+    console.error("Get Orders Error:", error);
+    return { success: false, orders: [] };
+  }
+}
+
+export async function updateOrderStatus(orderId: string, newStatus: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from("orders")
+      .update({ status: newStatus })
+      .eq("id", orderId);
+
+    if (error) throw error;
+
+    // تحديث الكاش لكي تظهر الحالة الجديدة فوراً
+    revalidatePath("/admin/orders");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update Order Status Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+</file>
+
+<file path="src/domains/admin/trade-in/actions.ts">
+// src/domains/admin/trade-in/actions.ts
+"use server";
+
+import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+// جلب جميع طلبات الاستبدال
+export async function getAdminTradeInRequests() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("trade_in_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    
+    return { success: true, requests: data };
+  } catch (error: any) {
+    console.error("Get Trade-In Requests Error:", error);
+    return { success: false, requests: [] };
+  }
+}
+
+// تحديث حالة الطلب (وإضافة السعر التقديري إن وجد)
+export async function updateTradeInStatus(requestId: string, newStatus: string, estimatedValue?: number) {
+  try {
+    const updateData: any = { status: newStatus };
+    if (estimatedValue !== undefined) {
+      updateData.estimated_value = estimatedValue;
+    }
+
+    const { error } = await supabaseAdmin
+      .from("trade_in_requests")
+      .update(updateData)
+      .eq("id", requestId);
+
+    if (error) throw error;
+
+    revalidatePath("/admin/trade-in");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update Trade-In Status Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+</file>
+
+<file path="src/domains/trade-in/actions.ts">
+// src/domains/trade-in/actions.ts
+"use server";
+
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+
+interface TradeInRequestData {
+  customer_name: string;
+  customer_phone: string;
+  device_model: string;
+  device_condition: string;
+}
+
+export async function createTradeInRequest(data: TradeInRequestData) {
+  const supabase = await createServerSupabaseClient();
+
+  try {
+    const { error } = await supabase
+      .from("trade_in_requests")
+      .insert({
+        customer_name: data.customer_name,
+        customer_phone: data.customer_phone,
+        device_model: data.device_model,
+        device_condition: data.device_condition,
+        status: "pending",
+      });
+
+    if (error) {
+      throw new Error("فشل إرسال الطلب: " + error.message);
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Trade-In Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+</file>
+
+<file path="src/middleware.ts">
+// middleware.ts
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  // تهيئة الاستجابة
+  let supabaseResponse = NextResponse.next({ request });
+
+  // إنشاء عميل Supabase خاص بالـ Middleware
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // جلب بيانات المستخدم الحالي
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // التحقق: إذا كان المسار يبدأ بـ /admin وليس صفحة تسجيل الدخول
+  if (request.nextUrl.pathname.startsWith("/admin") && !request.nextUrl.pathname.startsWith("/admin/login")) {
+    // إذا لم يكن مسجلاً للدخول، اطرده لصفحة تسجيل الدخول
+    if (!user) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/admin/login";
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return supabaseResponse;
+}
+
+// تحديد المسارات التي يعمل عليها الـ Middleware (نتجاهل الصور والملفات الثابتة لتسريع الموقع)
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
+</file>
+
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+</file>
+
+<file path="AGENTS.md">
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+</file>
+
+<file path="CLAUDE.md">
+@AGENTS.md
+</file>
+
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="pnpm-workspace.yaml">
+allowBuilds:
+  sharp: true
+  unrs-resolver: false
+</file>
+
+<file path="postcss.config.mjs">
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+</file>
+
+<file path="README.md">
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+</file>
+
+<file path="src/app/admin/products/new/page.tsx">
+// src/app/admin/products/new/page.tsx
+import AddProductForm from "@/domains/admin/components/AddProductForm";
+
+export default function NewProductPage() {
+  return (
+    <div className="max-w-3xl mx-auto space-y-8 pb-10">
+      <div className="border-b border-gray-200 pb-4">
+        <h1 className="text-3xl font-bold text-gray-900">إضافة منتج جديد</h1>
+        <p className="text-gray-500 mt-2">
+          قم بإدخال بيانات المنتج. سيقوم النظام تلقائياً بضغط الصورة المرفوعة لضمان سرعة الموقع.
+        </p>
+      </div>
+      
+      <AddProductForm />
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/globals.css">
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+</file>
+
+<file path="src/domains/admin/actions.ts">
+// src/domains/admin/actions.ts
+"use server";
+
+import { createClient } from "@supabase/supabase-js";
+import sharp from "sharp";
+import { revalidatePath } from "next/cache";
+
+// نهيئ عميل بصلاحيات المدير لتخطي RLS بأمان داخل بيئة الخادم فقط
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function addProductAction(formData: FormData) {
+  try {
+    // 1. استخراج البيانات من النموذج
+    const title = formData.get("title") as string;
+    const price = parseFloat(formData.get("price") as string);
+    const discountRaw = formData.get("discount_price") as string;
+    const discountPrice = discountRaw ? parseFloat(discountRaw) : null;
+    const category = formData.get("category") as string;
+    const brand = formData.get("brand") as string;
+    const description = formData.get("description") as string;
+    const file = formData.get("image") as File;
+
+    let imageUrl = null;
+
+    // 2. معالجة الصورة باستخدام Sharp
+    if (file && file.size > 0) {
+      // تحويل الملف إلى Buffer لمعالجته
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      // ضغط الصورة، وتعديل مقاسها، وتحويلها لـ WebP
+      const processedImage = await sharp(buffer)
+        .resize(800, 800, { fit: "inside", withoutEnlargement: true }) // حد أقصى للأبعاد
+        .webp({ quality: 80 }) // ضغط الجودة لتقليل الحجم
+        .toBuffer();
+
+      // إنشاء اسم فريد للصورة
+      const fileName = `product-${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+
+      // رفع الصورة لـ Supabase Storage
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from("product-images")
+        .upload(fileName, processedImage, {
+          contentType: "image/webp",
+        });
+
+      if (uploadError) throw new Error("فشل رفع الصورة: " + uploadError.message);
+
+      // جلب الرابط العام للصورة
+      const { data: publicUrlData } = supabaseAdmin.storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+
+      imageUrl = publicUrlData.publicUrl;
+    }
+
+    // 3. حفظ بيانات المنتج في قاعدة البيانات
+    const { error: dbError } = await supabaseAdmin.from("products").insert({
+      title,
+      price,
+      discount_price: discountPrice,
+      category,
+      brand,
+      description,
+      image_urls: imageUrl ? [imageUrl] : [],
+    });
+
+    if (dbError) throw new Error("فشل حفظ المنتج: " + dbError.message);
+
+    // 4. تحديث الكاش لكي يظهر المنتج فوراً للعملاء
+    revalidatePath("/");
+    revalidatePath("/offers");
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Add Product Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+</file>
+
+<file path="src/domains/admin/components/AddProductForm.tsx">
+// src/domains/admin/components/AddProductForm.tsx
+"use client";
+
+import { useState, useRef } from "react";
+import { addProductAction } from "../actions";
+import { ImagePlus, Loader2, CheckCircle2 } from "lucide-react";
+
+export default function AddProductForm() {
+  const [isPending, setIsPending] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+    setStatus({ type: null, message: "" });
+
+    const formData = new FormData(e.currentTarget);
+    const result = await addProductAction(formData);
+
+    if (result.success) {
+      setStatus({ type: "success", message: "تمت إضافة المنتج ومعالجة الصورة بنجاح!" });
+      formRef.current?.reset(); // تفريغ الحقول بعد النجاح
+    } else {
+      setStatus({ type: "error", message: result.error || "حدث خطأ غير معروف." });
+    }
+    
+    setIsPending(false);
+  };
+
+  return (
+    <form ref={formRef} onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+      
+      {status.type && (
+        <div className={`p-4 rounded-xl flex items-center gap-3 ${status.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+          {status.type === "success" && <CheckCircle2 className="w-5 h-5" />}
+          <p className="font-medium">{status.message}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">اسم المنتج</label>
+          <input type="text" name="title" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: iPhone 15" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">العلامة التجارية</label>
+          <input type="text" name="brand" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: Apple" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">السعر (د.ك)</label>
+          <input type="number" step="0.01" name="price" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">سعر التخفيض (اختياري)</label>
+          <input type="number" step="0.01" name="discount_price" className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">القسم</label>
+        <select name="category" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="phone">هواتف</option>
+          <option value="accessory">إكسسوارات</option>
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">الوصف</label>
+        <textarea name="description" rows={4} className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="اكتب وصفاً مفصلاً للمنتج..."></textarea>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">صورة المنتج</label>
+        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors">
+          <input type="file" name="image" accept="image/*" required className="hidden" id="product-image" />
+          <label htmlFor="product-image" className="cursor-pointer flex flex-col items-center gap-2">
+            <ImagePlus className="w-10 h-10 text-gray-400" />
+            <span className="text-sm text-gray-600">اضغط هنا لاختيار صورة من جهازك</span>
+            <span className="text-xs text-gray-400">سيتم ضغطها وتصغيرها تلقائياً</span>
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2">
+        {isPending ? (
+          <>
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>جاري الرفع والمعالجة...</span>
+          </>
+        ) : (
+          "إضافة المنتج"
+        )}
+      </button>
+    </form>
+  );
+}
+</file>
+
+<file path="src/domains/cart/components/CheckoutForm.tsx">
+// src/domains/cart/components/CheckoutForm.tsx
+"use client";
+
+import { useState } from "react";
+import { useCartStore } from "../store";
+import { createOrderAction } from "@/domains/orders/actions";
+import { Loader2, CheckCircle2, Store, Truck } from "lucide-react";
+import Link from "next/link";
+
+export default function CheckoutForm() {
+  const { items, clearCart } = useCartStore();
+  const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
+  const [isPending, setIsPending] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+
+  const totalPrice = items.reduce((total, item) => {
+    const price = item.discount_price ?? item.price;
+    return total + price * item.quantity;
+  }, 0);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+
+    const formData = new FormData(e.currentTarget);
+    
+    const result = await createOrderAction({
+      customer_name: formData.get("customer_name") as string,
+      customer_phone: formData.get("customer_phone") as string,
+      delivery_method: deliveryMethod,
+      address: formData.get("address") as string,
+      total_price: totalPrice,
+      items: items,
+    });
+
+    if (result.success) {
+      setIsSuccess(true);
+      setOrderId(result.orderId || null);
+      clearCart(); // إفراغ السلة بعد نجاح الطلب
+    } else {
+      alert("حدث خطأ أثناء إنشاء الطلب، يرجى المحاولة مرة أخرى.");
+    }
+    
+    setIsPending(false);
+  };
+
+  // واجهة النجاح
+  if (isSuccess) {
+    return (
+      <div className="bg-white rounded-2xl p-8 text-center border border-green-100 shadow-sm mt-8">
+        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">تم استلام طلبك بنجاح!</h2>
+        <p className="text-gray-600 mb-6">رقم الطلب الخاص بك: <span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{orderId?.slice(0,8)}</span></p>
+        
+        <Link href="/" className="inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition-colors">
+          العودة للرئيسية
+        </Link>
+      </div>
+    );
+  }
+
+  // واجهة الدفع
+  return (
+    <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6 mt-8">
+      <h2 className="text-xl font-bold text-gray-900 border-b border-gray-100 pb-4">بيانات الاستلام</h2>
+      
+      {/* اختيار طريقة الاستلام */}
+      <div className="grid grid-cols-2 gap-4">
+        <button type="button" onClick={() => setDeliveryMethod("delivery")} className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${deliveryMethod === "delivery" ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+          <Truck className="w-6 h-6" />
+          <span className="font-medium">توصيل للمنزل</span>
+        </button>
+        <button type="button" onClick={() => setDeliveryMethod("pickup")} className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${deliveryMethod === "pickup" ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+          <Store className="w-6 h-6" />
+          <span className="font-medium">استلام من المحل</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">الاسم الكريم</label>
+          <input type="text" name="customer_name" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="أدخل اسمك" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">رقم الهاتف</label>
+          <input type="tel" name="customer_phone" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="رقم للتواصل" />
+        </div>
+      </div>
+
+      {deliveryMethod === "delivery" && (
+        <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+          <label className="text-sm font-medium text-gray-700">عنوان التوصيل بالتفصيل</label>
+          <textarea name="address" required rows={3} className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="المدينة، المنطقة، القطعة، الشارع، رقم المنزل..."></textarea>
+        </div>
+      )}
+
+      <button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2">
+        {isPending ? (
+          <>
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>جاري تأكيد الطلب...</span>
+          </>
+        ) : (
+          `تأكيد الطلب (${totalPrice} د.ك) - الدفع عند الاستلام`
+        )}
+      </button>
+    </form>
+  );
+}
+</file>
+
+<file path="src/domains/cart/store.ts">
+// src/domains/cart/store.ts
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Product } from '../products/types';
+
+export interface CartItem extends Product {
+  quantity: number;
+}
+
+interface CartState {
+  items: CartItem[];
+  addItem: (product: Product) => void;
+  removeItem: (productId: string) => void;
+  clearCart: () => void;
+  getTotalItems: () => number;
+}
+
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      
+      // إضافة منتج للسلة
+      addItem: (product) => {
+        set((state) => {
+          const existingItem = state.items.find((item) => item.id === product.id);
+          if (existingItem) {
+            // إذا كان المنتج موجوداً مسبقاً، نزيد العدد فقط
+            return {
+              items: state.items.map((item) =>
+                item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+              ),
+            };
+          }
+          // إذا كان منتجاً جديداً، نضيفه بعدد 1
+          return { items: [...state.items, { ...product, quantity: 1 }] };
+        });
+      },
+
+      // إزالة منتج من السلة
+      removeItem: (productId) => {
+        set((state) => ({
+          items: state.items.filter((item) => item.id !== productId),
+        }));
+      },
+
+      // إفراغ السلة بالكامل
+      clearCart: () => set({ items: [] }),
+
+      // حساب إجمالي عدد المنتجات لعرضه في الترويسة
+      getTotalItems: () => {
+        return get().items.reduce((total, item) => total + item.quantity, 0);
+      },
+    }),
+    {
+      name: 'mobile-shop-cart', // اسم الملف في الـ LocalStorage
+    }
+  )
+);
+</file>
+
+<file path="src/domains/orders/actions.ts">
+// src/domains/orders/actions.ts
+"use server";
+
+import { createClient } from "@supabase/supabase-js";
+import { CartItem } from "../cart/store";
+
+interface OrderData {
+  customer_name: string;
+  customer_phone: string;
+  delivery_method: "delivery" | "pickup";
+  address: string;
+  total_price: number;
+  items: CartItem[];
+}
+
+// نستخدم مفتاح المدير هنا لأن الطلب يتم من زائر، ونحن نحتاج لاسترجاع رقم الطلب
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function createOrderAction(data: OrderData) {
+  try {
+    // 1. إدراج الطلب الأساسي باستخدام مفتاح المدير
+    const { data: order, error: orderError } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        customer_name: data.customer_name,
+        customer_phone: data.customer_phone,
+        delivery_method: data.delivery_method,
+        address: data.delivery_method === "delivery" ? data.address : null,
+        total_price: data.total_price,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+
+    if (orderError || !order) {
+      throw new Error("فشل إنشاء الطلب: " + orderError?.message);
+    }
+
+    // 2. تجهيز مصفوفة تفاصيل الطلب (المنتجات)
+    const orderItems = data.items.map((item) => ({
+      order_id: order.id,
+      product_id: item.id,
+      quantity: item.quantity,
+      price_at_purchase: item.discount_price ?? item.price,
+    }));
+
+    // 3. إدراج المنتجات في جدول order_items
+    const { error: itemsError } = await supabaseAdmin
+      .from("order_items")
+      .insert(orderItems);
+
+    if (itemsError) {
+      throw new Error("فشل حفظ منتجات الطلب: " + itemsError.message);
+    }
+
+    return { success: true, orderId: order.id };
+  } catch (error: any) {
+    console.error("Create Order Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+</file>
+
+<file path="src/domains/products/components/AddToCartButton.tsx">
+// src/domains/products/components/AddToCartButton.tsx
+"use client";
+
+import { ShoppingCart, Check } from "lucide-react";
+import { useCartStore } from "@/domains/cart/store";
+import { Product } from "../types";
+import { useState } from "react";
+
+interface AddToCartButtonProps {
+  product: Product;
+}
+
+export default function AddToCartButton({ product }: AddToCartButtonProps) {
+  const addItem = useCartStore((state) => state.addItem);
+  const [isAdded, setIsAdded] = useState(false);
+
+  const handleAddToCart = () => {
+    addItem(product);
+    setIsAdded(true);
+    
+    // إعادة الزر لشكله الطبيعي بعد ثانيتين
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 2000);
+  };
+
+  return (
+    <button
+      onClick={handleAddToCart}
+      disabled={isAdded}
+      className={`w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
+        isAdded 
+          ? "bg-green-500 text-white" 
+          : "bg-blue-600 hover:bg-blue-700 text-white"
+      }`}
+    >
+      {isAdded ? (
+        <>
+          <Check className="w-6 h-6 animate-bounce" />
+          <span>تمت الإضافة للسلة بنجاح!</span>
+        </>
+      ) : (
+        <>
+          <ShoppingCart className="w-6 h-6" />
+          <span>إضافة إلى السلة</span>
+        </>
+      )}
+    </button>
+  );
+}
+</file>
+
+<file path="src/domains/products/components/ProductCard.tsx">
+// src/domains/products/components/ProductCard.tsx
+import Image from 'next/image';
+import Link from 'next/link';
+import { ShoppingCart } from 'lucide-react';
+import { Product } from '../types';
+
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
+  // إذا لم تكن هناك صورة، نعرض صورة افتراضية
+  const imageUrl = product.image_urls && product.image_urls.length > 0 
+    ? product.image_urls[0] 
+    : 'https://placehold.co/300x400/eeeeee/999999?text=No+Image';
+    
+  // التحقق مما إذا كان هناك تخفيض صالح
+  const hasDiscount = product.discount_price !== null && product.discount_price < product.price;
+
+  return (
+    <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col">
+      {/* صورة المنتج */}
+      <Link href={`/product/${product.id}`} className="relative aspect-[3/4] bg-gray-50 overflow-hidden block">
+        {hasDiscount && (
+          <div className="absolute top-3 right-3 z-10 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+            تخفيض
+          </div>
+        )}
+        <Image
+          src={imageUrl}
+          alt={product.title}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+      </Link>
+
+      {/* تفاصيل المنتج */}
+      <div className="p-4 flex flex-col flex-grow">
+        <Link href={`/product/${product.id}`}>
+          <h3 className="font-semibold text-gray-800 line-clamp-2 hover:text-blue-600 transition-colors">
+            {product.title}
+          </h3>
+        </Link>
+        
+        <p className="text-sm text-gray-500 mt-1">{product.brand}</p>
+
+        <div className="mt-auto pt-4 flex items-center justify-between">
+          <div className="flex flex-col">
+            {hasDiscount ? (
+              <>
+                <span className="text-lg font-bold text-red-600">{product.discount_price} د.ك</span>
+                <span className="text-xs text-gray-400 line-through">{product.price} د.ك</span>
+              </>
+            ) : (
+              <span className="text-lg font-bold text-gray-900">{product.price} د.ك</span>
+            )}
+          </div>
+          
+          <button 
+            className="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-colors"
+            aria-label="أضف إلى السلة"
+          >
+            <ShoppingCart className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/products/queries.ts">
+// src/domains/products/queries.ts
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { Product } from "./types";
+
+export async function getProducts(): Promise<Product[]> {
+  const supabase = await createServerSupabaseClient();
+  
+  // جلب جميع المنتجات وترتيبها من الأحدث للأقدم
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("خطأ في جلب المنتجات:", error.message);
+    return [];
+  }
+
+  return data as Product[];
+
+  
+}
+
+export async function getProductById(id: string): Promise<Product | null> {
+  const supabase = await createServerSupabaseClient();
+  
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error("خطأ في جلب تفاصيل المنتج:", error.message);
+    return null;
+  }
+
+  return data as Product;
+}
+</file>
+
+<file path="src/domains/products/types.ts">
+// src/domains/products/types.ts
+
+export interface Product {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  discount_price: number | null;
+  category: 'phone' | 'accessory';
+  brand: string | null;
+  stock: number;
+  specs: Record<string, any> | null;
+  image_urls: string[] | null;
+  created_at: string;
+}
+</file>
+
+<file path="src/lib/supabase-server.ts">
+// src/lib/supabase-server.ts
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // يتم تجاهل الأخطاء هنا في الـ Server Components
+          }
+        },
+      },
+    }
+  )
+}
+</file>
+
+<file path="src/lib/supabase.ts">
+// src/lib/supabase.ts
+import { createBrowserClient } from '@supabase/ssr'
+
+export const createClient = () => {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+</file>
+
+<file path="next.config.ts">
+// next.config.ts
+import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
+
+const withPWA = withPWAInit({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+});
+
+const nextConfig: NextConfig = {
+  turbopack: {},
+  images: {
+    dangerouslyAllowSVG: true, // للسماح بصور placehold.co
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com", // للسماح بصور المنتجات التجريبية
+      },
+    ],
+  },
+};
+
+export default withPWA(nextConfig);
+</file>
+
+<file path="package.json">
+{
+  "name": "mobile-shop-pwa",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.108.2",
+    "lucide-react": "^1.21.0",
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "sharp": "^0.35.2",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "pnpm": {
+    "approvedBuilds": {
+      "sharp": true,
+      "@ducanh2912/next-pwa": true
+    }
+  }
+}
+</file>
+
+<file path="src/app/cart/page.tsx">
+// src/app/cart/page.tsx
+"use client";
+
+import { useCartStore } from "@/domains/cart/store";
+import Image from "next/image";
+import Link from "next/link";
+import { Trash2, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import CheckoutForm from "@/domains/cart/components/CheckoutForm";
+
+export default function CartPage() {
+  const { items, removeItem } = useCartStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  const totalPrice = items.reduce((total, item) => {
+    const price = item.discount_price ?? item.price;
+    return total + (price * item.quantity);
+  }, 0);
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">السلة فارغة</h1>
+        <p className="text-gray-500 mb-8">لم تقم بإضافة أي منتجات إلى سلة المشتريات بعد.</p>
+        <Link href="/" className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+          <ArrowRight className="w-5 h-5" />
+          <span>العودة للتسوق</span>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto pb-12">
+      <h1 className="text-2xl font-bold text-gray-900 mb-8 border-r-4 border-blue-600 pr-3">مراجعة الطلب</h1>
+      
+      {/* قائمة المنتجات في السلة */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        {items.map((item) => (
+          <div key={item.id} className="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0">
+            <div className="relative w-20 h-20 bg-gray-50 rounded-lg overflow-hidden shrink-0">
+              <Image 
+                src={item.image_urls?.[0] || 'https://placehold.co/100'} 
+                alt={item.title} 
+                fill 
+                sizes="80px" 
+                className="object-cover" 
+              />
+            </div>
+            <div className="flex-grow">
+              <Link href={`/product/${item.id}`} className="font-semibold text-gray-800 hover:text-blue-600 line-clamp-1">
+                {item.title}
+              </Link>
+              <div className="text-sm text-gray-500 mt-1">الكمية: {item.quantity}</div>
+            </div>
+            <div className="font-bold text-gray-900">
+              {(item.discount_price ?? item.price) * item.quantity} د.ك
+            </div>
+            <button 
+              onClick={() => removeItem(item.id)}
+              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
+        ))}
+        
+        <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-center text-lg">
+          <span className="font-bold text-gray-700">المجموع الكلي:</span>
+          <span className="text-2xl font-bold text-blue-700">{totalPrice} د.ك</span>
+        </div>
+      </div>
+
+      {/* نموذج إتمام الطلب */}
+      <CheckoutForm />
+      
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/layout.tsx">
+// src/app/layout.tsx
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import Header from "@/shared/components/Header";
+
+// خط يدعم اللغة العربية والإنجليزية
+const inter = Inter({ subsets: ["latin", "arabic"] });
+
+export const viewport: Viewport = {
+  themeColor: "#3b82f6",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export const metadata: Metadata = {
+  title: "موبايلي - متجر الهواتف الذكية",
+  description: "أفضل متجر لبيع الهواتف الذكية والإكسسوارات.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="ar" dir="rtl">
+      <body className={`${inter.className} bg-gray-50 text-gray-900 min-h-screen flex flex-col`}>
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-8">
+          {children}
+        </main>
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="src/app/offers/page.tsx">
+// src/app/offers/page.tsx
+import { getProducts } from "@/domains/products/queries";
+import ProductCard from "@/domains/products/components/ProductCard";
+
+export const revalidate = 60; 
+
+export default async function OffersPage() {
+  const allProducts = await getProducts();
+  
+  // فلترة المنتجات التي تحتوي على سعر تخفيض وأقل من السعر الأصلي
+  const offers = allProducts.filter(
+    (product) => product.discount_price !== null && product.discount_price < product.price
+  );
+  
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-red-50 text-red-700 rounded-3xl p-8 text-center border border-red-100">
+        <h1 className="text-3xl font-bold mb-2">عروض حصرية 🔥</h1>
+        <p className="text-red-600">اغتنم الفرصة واحصل على أفضل الأجهزة بأسعار مخفضة لفترة محدودة.</p>
+      </div>
+
+      <section>
+        {offers.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            لا توجد عروض حالياً، عد قريباً!
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {offers.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/page.tsx">
+// src/app/page.tsx
+import { getProducts } from "@/domains/products/queries";
+import ProductCard from "@/domains/products/components/ProductCard";
+
+// تحديث الصفحة كل 60 ثانية في حال تمت إضافة منتجات جديدة (ISR)
+export const revalidate = 60; 
+
+export default async function HomePage() {
+  const products = await getProducts();
+
+  return (
+    <div className="space-y-10">
+      {/* بانر الترحيب */}
+      <section className="bg-blue-600 text-white rounded-3xl p-8 md:p-12 text-center">
+        <h1 className="text-3xl md:text-5xl font-bold mb-4">أهلاً بك في موبايلي</h1>
+        <p className="text-blue-100 text-lg md:text-xl max-w-2xl mx-auto">
+          اكتشف أحدث الهواتف الذكية وأفضل الإكسسوارات بأسعار لا تقبل المنافسة.
+        </p>
+      </section>
+
+      {/* قائمة المنتجات */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 border-r-4 border-blue-600 pr-3">
+            أحدث المنتجات
+          </h2>
+        </div>
+        
+        {products.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
+            <p className="text-gray-500 text-lg">لا توجد منتجات مضافة حالياً في المتجر.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/product/[id]/page.tsx">
+// src/app/product/[id]/page.tsx
+import { getProductById } from "@/domains/products/queries";
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import { ShieldCheck, Truck } from "lucide-react";
+import AddToCartButton from "@/domains/products/components/AddToCartButton";
+
+export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const product = await getProductById(resolvedParams.id);
+
+  if (!product) {
+    notFound();
+  }
+
+  const imageUrl = product.image_urls && product.image_urls.length > 0 
+    ? product.image_urls[0] 
+    : 'https://placehold.co/600x800/eeeeee/999999?text=No+Image';
+    
+  const hasDiscount = product.discount_price !== null && product.discount_price < product.price;
+
+  return (
+    <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        
+        {/* قسم الصورة */}
+        <div className="relative aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden border border-gray-100">
+          {hasDiscount && (
+            <div className="absolute top-4 right-4 z-10 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-lg shadow-md">
+              تخفيض خاص
+            </div>
+          )}
+          <Image
+            src={imageUrl}
+            alt={product.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
+          />
+        </div>
+
+        {/* قسم التفاصيل */}
+        <div className="flex flex-col">
+          <div className="mb-2 text-blue-600 font-semibold text-sm">
+            {product.brand}
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.title}</h1>
+          
+          <div className="mb-6 pb-6 border-b border-gray-100">
+            {hasDiscount ? (
+              <div className="flex items-end gap-3">
+                <span className="text-4xl font-bold text-red-600">{product.discount_price} د.ك</span>
+                <span className="text-lg text-gray-400 line-through mb-1">{product.price} د.ك</span>
+              </div>
+            ) : (
+              <span className="text-4xl font-bold text-gray-900">{product.price} د.ك</span>
+            )}
+          </div>
+
+          <p className="text-gray-600 text-lg leading-relaxed mb-8">
+            {product.description || "لا يوجد وصف متاح لهذا المنتج."}
+          </p>
+
+          {/* المواصفات إن وجدت */}
+          {product.specs && (
+            <div className="mb-8 bg-gray-50 p-4 rounded-xl">
+              <h3 className="font-semibold text-gray-900 mb-3">المواصفات الرئيسية:</h3>
+              <ul className="space-y-2">
+                {Object.entries(product.specs).map(([key, value]) => (
+                  <li key={key} className="flex items-center text-gray-600 text-sm">
+                    <span className="w-24 font-medium text-gray-800 capitalize">{key}:</span>
+                    <span>{String(value)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* أزرار الإجراءات والمميزات */}
+          <div className="mt-auto space-y-4">
+            {/* هنا قمنا بوضع الزر التفاعلي الجديد */}
+            <AddToCartButton product={product} />
+            
+            <div className="flex items-center justify-center gap-6 text-sm text-gray-500 pt-4">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-5 h-5 text-green-500" />
+                <span>ضمان الوكيل</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Truck className="w-5 h-5 text-blue-500" />
+                <span>توصيل سريع</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/shared/components/Header.tsx">
+// src/shared/components/Header.tsx
+"use client"; // مهم جداً: هذا يخبر Next.js أن هذا المكون يعمل في المتصفح
+
+import Link from 'next/link';
+import { ShoppingCart, Menu } from 'lucide-react';
+import { useCartStore } from '@/domains/cart/store';
+import { useEffect, useState } from 'react';
+
+export default function Header() {
+  const totalItems = useCartStore((state) => state.getTotalItems());
+  // لتجنب خطأ Hydration في Next.js مع الـ LocalStorage
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return (
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        
+        <button className="md:hidden p-2 text-gray-600 hover:text-blue-600">
+          <Menu className="w-6 h-6" />
+        </button>
+
+        <Link href="/" className="text-xl font-bold text-blue-600 tracking-tight">
+          موبايلي
+        </Link>
+
+        <nav className="hidden md:flex gap-6 font-medium text-gray-600">
+          <Link href="/" className="hover:text-blue-600">الرئيسية</Link>
+          <Link href="/offers" className="hover:text-blue-600">العروض</Link>
+          <Link href="/trade-in" className="hover:text-blue-600">استبدال الأجهزة</Link>
+        </nav>
+
+        <Link href="/cart" className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
+          <ShoppingCart className="w-6 h-6" />
+          {mounted && totalItems > 0 && (
+            <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-[11px] font-bold text-white bg-red-500 rounded-full border-2 border-white">
+              {totalItems}
+            </span>
+          )}
+        </Link>
+
+      </div>
+    </header>
+  );
+}
+</file>
+
+</files>

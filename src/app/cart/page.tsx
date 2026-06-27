@@ -49,6 +49,7 @@ export default function CartPage() {
                 src={item.image_urls?.[0] || 'https://placehold.co/100'} 
                 alt={item.title} 
                 fill 
+                sizes="80px" 
                 className="object-cover" 
               />
             </div>

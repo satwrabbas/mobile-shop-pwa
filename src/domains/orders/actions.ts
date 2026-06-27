@@ -1,7 +1,7 @@
 // src/domains/orders/actions.ts
 "use server";
 
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 import { CartItem } from "../cart/store";
 
 interface OrderData {
@@ -13,12 +13,16 @@ interface OrderData {
   items: CartItem[];
 }
 
-export async function createOrderAction(data: OrderData) {
-  const supabase = await createServerSupabaseClient();
+// نستخدم مفتاح المدير هنا لأن الطلب يتم من زائر، ونحن نحتاج لاسترجاع رقم الطلب
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
+export async function createOrderAction(data: OrderData) {
   try {
-    // 1. إدراج الطلب الأساسي في جدول orders
-    const { data: order, error: orderError } = await supabase
+    // 1. إدراج الطلب الأساسي باستخدام مفتاح المدير
+    const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
       .insert({
         customer_name: data.customer_name,
@@ -44,7 +48,7 @@ export async function createOrderAction(data: OrderData) {
     }));
 
     // 3. إدراج المنتجات في جدول order_items
-    const { error: itemsError } = await supabase
+    const { error: itemsError } = await supabaseAdmin
       .from("order_items")
       .insert(orderItems);
 
