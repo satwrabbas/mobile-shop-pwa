@@ -11,6 +11,7 @@ export default async function OffersPage() {
   const offers = allProducts.filter(
     (product) => product.discount_price !== null && product.discount_price < product.price
   );
+  
 
   return (
     <div className="space-y-8">
