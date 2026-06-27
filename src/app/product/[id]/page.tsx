@@ -2,14 +2,13 @@
 import { getProductById } from "@/domains/products/queries";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { ShoppingCart, ShieldCheck, Truck } from "lucide-react";
+import { ShieldCheck, Truck } from "lucide-react";
+import AddToCartButton from "@/domains/products/components/AddToCartButton";
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  // في إصدارات Next.js الحديثة، يجب الانتظار (await) لجلب البارامترات
   const resolvedParams = await params;
   const product = await getProductById(resolvedParams.id);
 
-  // إذا كان المنتج غير موجود، نعرض صفحة 404
   if (!product) {
     notFound();
   }
@@ -80,10 +79,8 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
 
           {/* أزرار الإجراءات والمميزات */}
           <div className="mt-auto space-y-4">
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
-              <ShoppingCart className="w-6 h-6" />
-              <span>إضافة إلى السلة</span>
-            </button>
+            {/* هنا قمنا بوضع الزر التفاعلي الجديد */}
+            <AddToCartButton product={product} />
             
             <div className="flex items-center justify-center gap-6 text-sm text-gray-500 pt-4">
               <div className="flex items-center gap-1.5">

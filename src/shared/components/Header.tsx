@@ -30,6 +30,7 @@ export default function Header() {
         <nav className="hidden md:flex gap-6 font-medium text-gray-600">
           <Link href="/" className="hover:text-blue-600">الرئيسية</Link>
           <Link href="/offers" className="hover:text-blue-600">العروض</Link>
+          <Link href="/trade-in" className="hover:text-blue-600">الاستبدال والصيانة</Link>
         </nav>
 
         <Link href="/cart" className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
