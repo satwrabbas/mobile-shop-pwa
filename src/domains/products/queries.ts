@@ -36,7 +36,6 @@ export async function getProductById(id: string): Promise<Product | null> {
 
   return data as Product;
 }
-
 // 3. دالة جلب الحزم الذكية المرتبطة بالمنتج
 export async function getProductBundles(productId: string) {
   const supabase = await createServerSupabaseClient();
@@ -50,6 +49,13 @@ export async function getProductBundles(productId: string) {
     `)
     .eq('main_product_id', productId);
 
-  if (error) return [];
-  return data;
+  if (error || !data) return [];
+  
+  // نعيد صياغة البيانات ونخبر TypeScript أن الإكسسوار هو من نوع Product
+  return data.map((bundle: any) => ({
+    id: bundle.id,
+    bundle_price: bundle.bundle_price,
+    // إذا رجعت البيانات كمصفوفة نأخذ العنصر الأول، وإلا نأخذها كما هي
+    accessory: (Array.isArray(bundle.accessory) ? bundle.accessory[0] : bundle.accessory) as Product
+  }));
 }
