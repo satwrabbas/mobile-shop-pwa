@@ -15,8 +15,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "موبايلي - متجر الهواتف الذكية",
-  description: "أفضل متجر لبيع الهواتف الذكية والإكسسوارات.",
+  title: "مركز الباسل - أحدث الهواتف الذكية والإكسسوارات",
+  description: "أفضل العروض على الهواتف الذكية، الإكسسوارات، وخدمات استبدال الأجهزة في مركز الباسل.",
   manifest: "/manifest.json",
 };
 

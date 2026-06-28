@@ -12,7 +12,7 @@ export default async function HomePage() {
     <div className="space-y-10">
       {/* بانر الترحيب */}
       <section className="bg-blue-600 text-white rounded-3xl p-8 md:p-12 text-center">
-        <h1 className="text-3xl md:text-5xl font-bold mb-4">أهلاً بك في موبايلي</h1>
+        <h1 className="text-3xl md:text-5xl font-bold mb-4">أهلاً بك في مركز الباسل</h1>
         <p className="text-blue-100 text-lg md:text-xl max-w-2xl mx-auto">
           اكتشف أحدث الهواتف الذكية وأفضل الإكسسوارات بأسعار لا تقبل المنافسة.
         </p>
