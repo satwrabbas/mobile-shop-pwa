@@ -1,0 +1,5 @@
+# Gemini Optimization Rules for Cline
+- Be extremely concise. Avoid explaining your steps in detail unless explicitly asked.
+- When editing files, only modify the specific lines or blocks required. Do not rewrite unchanged code.
+- Prioritize incremental edits to save context tokens.
+- If you encounter a rate limit error (429), wait 10 seconds before requesting the user to retry.
