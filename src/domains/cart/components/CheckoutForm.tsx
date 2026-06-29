@@ -48,64 +48,118 @@ export default function CheckoutForm() {
 
   if (isSuccess) {
     return (
-      <div className="bg-white rounded-2xl p-8 text-center border border-green-100 shadow-sm mt-8">
-        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">تم استلام طلبك بنجاح!</h2>
-        <p className="text-gray-600 mb-6">رقم الطلب: <span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{orderId?.slice(0, 8)}</span></p>
+      <div className="bg-white rounded-[2rem] p-10 text-center border border-gray-100 shadow-sm">
+        <div className="bg-green-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-10 h-10 text-green-500" />
+        </div>
+        <h2 className="text-2xl font-black text-gray-900 mb-3">تم استلام طلبك بنجاح!</h2>
+        <p className="text-gray-500 mb-8">
+          رقم الطلب الخاص بك: <br />
+          <span className="font-mono bg-gray-50 px-3 py-1.5 rounded-lg text-lg text-gray-900 font-bold mt-2 inline-block border border-gray-100">
+            {orderId?.slice(0, 8)}
+          </span>
+        </p>
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/" className="inline-block bg-gray-100 text-gray-800 font-bold py-3 px-8 rounded-xl hover:bg-gray-200 transition-colors">
-            العودة للرئيسية
-          </Link>
+        <div className="flex flex-col gap-3">
           <a
             href={`https://wa.me/96500000000?text=${encodeURIComponent(`مرحباً مركز الباسل، قمت بإنشاء طلب جديد برقم: ${orderId?.slice(0,8)}\nيرجى تأكيد الطلب.`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-3 px-8 rounded-xl hover:bg-green-600 transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-4 rounded-xl hover:bg-green-600 transition-colors active:scale-95"
           >
             <MessageCircle className="w-5 h-5" />
             تأكيد عبر واتساب
           </a>
+          <Link href="/" className="w-full bg-gray-50 text-gray-900 font-bold py-4 rounded-xl hover:bg-gray-100 transition-colors active:scale-95 border border-gray-200">
+            العودة للرئيسية
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6 mt-8">
-      <h2 className="text-xl font-bold text-gray-900 border-b border-gray-100 pb-4">بيانات الاستلام</h2>
+    <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-gray-100 space-y-8">
+      <h2 className="text-xl font-bold text-gray-900 pb-4 border-b border-gray-100">بيانات التوصيل والدفع</h2>
       
+      {/* اختيار طريقة الاستلام (ستايل أسود أنيق) */}
       <div className="grid grid-cols-2 gap-4">
-        <button type="button" onClick={() => setDeliveryMethod("delivery")} className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${deliveryMethod === "delivery" ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+        <button
+          type="button"
+          onClick={() => setDeliveryMethod("delivery")}
+          className={`flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border-2 transition-all ${
+            deliveryMethod === "delivery" 
+              ? "border-gray-900 bg-gray-900 text-white" 
+              : "border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200"
+          }`}
+        >
           <Truck className="w-6 h-6" />
-          <span className="font-medium">توصيل للمنزل</span>
+          <span className="font-bold text-sm">توصيل للمنزل</span>
         </button>
-        <button type="button" onClick={() => setDeliveryMethod("pickup")} className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${deliveryMethod === "pickup" ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+        <button
+          type="button"
+          onClick={() => setDeliveryMethod("pickup")}
+          className={`flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border-2 transition-all ${
+            deliveryMethod === "pickup" 
+              ? "border-gray-900 bg-gray-900 text-white" 
+              : "border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200"
+          }`}
+        >
           <Store className="w-6 h-6" />
-          <span className="font-medium">استلام من المحل</span>
+          <span className="font-bold text-sm">استلام من المحل</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-5">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">الاسم الكريم</label>
-          <input type="text" name="customer_name" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <label className="text-sm font-bold text-gray-700">الاسم الكريم</label>
+          <input
+            type="text"
+            name="customer_name"
+            required
+            className="w-full px-5 py-4 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all"
+            placeholder="أدخل اسمك بالكامل"
+          />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">رقم الهاتف</label>
-          <input type="tel" name="customer_phone" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <label className="text-sm font-bold text-gray-700">رقم الهاتف</label>
+          <input
+            type="tel"
+            name="customer_phone"
+            required
+            className="w-full px-5 py-4 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all text-left"
+            dir="ltr"
+            placeholder="مثال: 90000000"
+          />
         </div>
+
+        {deliveryMethod === "delivery" && (
+          <div className="space-y-2 animate-in fade-in zoom-in-95 duration-300">
+            <label className="text-sm font-bold text-gray-700">عنوان التوصيل بالتفصيل</label>
+            <textarea
+              name="address"
+              required
+              rows={3}
+              className="w-full px-5 py-4 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all resize-none"
+              placeholder="المدينة، المنطقة، القطعة، الشارع، رقم المنزل..."
+            ></textarea>
+          </div>
+        )}
       </div>
 
-      {deliveryMethod === "delivery" && (
-        <div className="space-y-2 animate-in fade-in">
-          <label className="text-sm font-medium text-gray-700">عنوان التوصيل بالتفصيل</label>
-          <textarea name="address" required rows={3} className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-        </div>
-      )}
-
-      <button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2">
-        {isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : `تأكيد الطلب (${totalPrice} $) - الدفع عند الاستلام`}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-bold py-5 rounded-xl transition-all flex justify-center items-center gap-2 active:scale-95 text-lg shadow-md shadow-gray-900/20"
+      >
+        {isPending ? (
+          <>
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>جاري تأكيد الطلب...</span>
+          </>
+        ) : (
+          `تأكيد الطلب (${totalPrice} $) - الدفع عند الاستلام`
+        )}
       </button>
     </form>
   );

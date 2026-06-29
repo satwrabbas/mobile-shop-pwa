@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${cairo.className} bg-gray-50 text-gray-900 min-h-screen flex flex-col`}>
+      <body className={`${cairo.className} bg-white text-gray-900 min-h-screen flex flex-col`}>
         
         <Toaster 
           position="bottom-center"
