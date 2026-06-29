@@ -81,7 +81,9 @@ src/domains/cart/components/CheckoutForm.tsx
 src/domains/cart/store.ts
 src/domains/orders/actions.ts
 src/domains/products/components/AddToCartButton.tsx
+src/domains/products/components/AddToCartIcon.tsx
 src/domains/products/components/ProductCard.tsx
+src/domains/products/components/ProductFilter.tsx
 src/domains/products/components/SmartBundle.tsx
 src/domains/products/queries.ts
 src/domains/products/types.ts
@@ -91,6 +93,8 @@ src/lib/supabase.ts
 src/proxy.ts
 src/shared/components/Header.tsx
 src/shared/components/InstallPWA.tsx
+src/shared/components/StoreLayoutWrapper.tsx
+src/shared/components/WhatsAppButton.tsx
 tsconfig.json
 </directory_structure>
 
@@ -353,110 +357,6 @@ export default async function AdminOrdersPage() {
 }
 </file>
 
-<file path="src/app/admin/page.tsx">
-// src/app/admin/page.tsx
-import { getDashboardStats } from "@/domains/admin/dashboard/actions";
-import {
-  DollarSign,
-  ShoppingBag,
-  RefreshCw,
-  Smartphone,
-  ArrowLeft,
-} from "lucide-react";
-import Link from "next/link";
-
-// تحديث فوري للإحصائيات في كل مرة تفتح فيها الصفحة
-export const revalidate = 0;
-
-export default async function AdminDashboardPage() {
-  const { stats } = await getDashboardStats();
-
-  return (
-    <div className="space-y-8 pb-10">
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-3xl font-bold text-gray-900">نظرة عامة</h1>
-        <p className="text-gray-500 mt-2">
-          مرحباً بك في لوحة تحكم متجر موبايلي. إليك ملخص أداء المتجر.
-        </p>
-      </div>
-
-      {/* شبكة البطاقات الإحصائية */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* بطاقة المبيعات */}
-        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 text-white shadow-sm relative overflow-hidden">
-          <div className="relative z-10">
-            <p className="text-green-100 text-sm font-medium mb-1">
-              إجمالي المبيعات (المكتملة)
-            </p>
-            <h3 className="text-4xl font-bold">
-              {stats?.totalSales} <span className="text-xl">$</span>
-            </h3>
-          </div>
-          <DollarSign className="absolute left-[-20px] bottom-[-20px] w-32 h-32 text-white/10" />
-        </div>
-
-        {/* بطاقة الطلبات الجديدة */}
-        <Link
-          href="/admin/orders"
-          className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between"
-        >
-          <div className="flex justify-between items-start mb-4">
-            <div className="bg-blue-100 p-3 rounded-xl text-blue-600">
-              <ShoppingBag className="w-6 h-6" />
-            </div>
-            <ArrowLeft className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
-          </div>
-          <div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">
-              {stats?.pendingOrders}
-            </h3>
-            <p className="text-gray-500 text-sm">طلبات بانتظار التنفيذ</p>
-          </div>
-        </Link>
-
-        {/* بطاقة طلبات الاستبدال */}
-        <Link
-          href="/admin/trade-in"
-          className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between"
-        >
-          <div className="flex justify-between items-start mb-4">
-            <div className="bg-purple-100 p-3 rounded-xl text-purple-600">
-              <RefreshCw className="w-6 h-6" />
-            </div>
-            <ArrowLeft className="w-5 h-5 text-gray-300 group-hover:text-purple-500 transition-colors" />
-          </div>
-          <div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">
-              {stats?.pendingTradeIns}
-            </h3>
-            <p className="text-gray-500 text-sm">طلبات استبدال للمراجعة</p>
-          </div>
-        </Link>
-
-        {/* بطاقة المنتجات */}
-        <Link
-          href="/admin/products/new"
-          className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between"
-        >
-          <div className="flex justify-between items-start mb-4">
-            <div className="bg-orange-100 p-3 rounded-xl text-orange-600">
-              <Smartphone className="w-6 h-6" />
-            </div>
-            <ArrowLeft className="w-5 h-5 text-gray-300 group-hover:text-orange-500 transition-colors" />
-          </div>
-          <div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">
-              {stats?.totalProducts}
-            </h3>
-            <p className="text-gray-500 text-sm">إجمالي المنتجات المعروضة</p>
-          </div>
-        </Link>
-      </div>
-    </div>
-  );
-}
-</file>
-
 <file path="src/app/admin/products/new/page.tsx">
 // src/app/admin/products/new/page.tsx
 import AddProductForm from "@/domains/admin/components/AddProductForm";
@@ -544,138 +444,6 @@ export default async function AdminTradeInPage() {
       </div>
       
       <TradeInList initialRequests={requests || []} />
-    </div>
-  );
-}
-</file>
-
-<file path="src/app/globals.css">
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-</file>
-
-<file path="src/app/trade-in/page.tsx">
-// src/app/trade-in/page.tsx
-"use client";
-
-import { useState } from "react";
-import { createTradeInRequest } from "@/domains/trade-in/actions";
-import { Loader2, CheckCircle2, RefreshCw } from "lucide-react";
-import Link from "next/link";
-
-export default function TradeInPage() {
-  const [isPending, setIsPending] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsPending(true);
-
-    const formData = new FormData(e.currentTarget);
-    
-    const result = await createTradeInRequest({
-      customer_name: formData.get("customer_name") as string,
-      customer_phone: formData.get("customer_phone") as string,
-      device_model: formData.get("device_model") as string,
-      device_condition: formData.get("device_condition") as string,
-    });
-
-    if (result.success) {
-      setIsSuccess(true);
-    } else {
-      alert("حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى.");
-    }
-    
-    setIsPending(false);
-  };
-
-  if (isSuccess) {
-    return (
-      <div className="max-w-2xl mx-auto text-center bg-white rounded-3xl p-10 shadow-sm border border-green-100 mt-10">
-        <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">تم استلام طلبك بنجاح!</h2>
-        <p className="text-gray-600 mb-8 text-lg">
-          سيقوم فريقنا بتقييم جهازك والتواصل معك في أقرب وقت لتقديم أفضل سعر استبدال.
-        </p>
-        <Link href="/" className="inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition-colors">
-          العودة للتسوق
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <div className="text-center space-y-4 bg-blue-50 rounded-3xl p-8 border border-blue-100">
-        <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-        <h1 className="text-3xl font-bold text-gray-900">استبدال الأجهزة القديمة</h1>
-        <p className="text-gray-600 text-lg">
-          هل ترغب في ترقية هاتفك؟ املأ النموذج أدناه وسنقوم بتقييم جهازك القديم وإعطائك خصماً لاستبداله بجهاز جديد من متجرنا.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">الاسم الكريم</label>
-            <input type="text" name="customer_name" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="أدخل اسمك" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">رقم الهاتف</label>
-            <input type="tel" name="customer_phone" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: 90000000" />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">نوع الجهاز وموديله (الجهاز القديم)</label>
-          <input type="text" name="device_model" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: iPhone 13 Pro Max" />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">حالة الجهاز</label>
-          <select name="device_condition" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="ممتاز (كالجديد)">ممتاز (كالجديد)</option>
-            <option value="جيد (خدوش بسيطة)">جيد (خدوش بسيطة)</option>
-            <option value="متوسط (خدوش واضحة)">متوسط (خدوش واضحة)</option>
-            <option value="شاشة مكسورة">شاشة مكسورة ولكن يعمل</option>
-          </select>
-        </div>
-
-        <button type="submit" disabled={isPending} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2">
-          {isPending ? (
-            <>
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span>جاري إرسال الطلب...</span>
-            </>
-          ) : (
-            "إرسال الطلب للتقييم"
-          )}
-        </button>
-      </form>
     </div>
   );
 }
@@ -795,828 +563,6 @@ export async function logoutAction() {
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();
   return { success: true };
-}
-</file>
-
-<file path="src/domains/admin/components/AddProductForm.tsx">
-// src/domains/admin/components/AddProductForm.tsx
-"use client";
-
-import { useState, useRef } from "react";
-import { addProductAction } from "../actions";
-import { ImagePlus, Loader2, CheckCircle2 } from "lucide-react";
-
-export default function AddProductForm() {
-  const [isPending, setIsPending] = useState(false);
-  const [status, setStatus] = useState<{
-    type: "success" | "error" | null;
-    message: string;
-  }>({ type: null, message: "" });
-  const formRef = useRef<HTMLFormElement>(null);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsPending(true);
-    setStatus({ type: null, message: "" });
-
-    const formData = new FormData(e.currentTarget);
-    const result = await addProductAction(formData);
-
-    if (result.success) {
-      setStatus({
-        type: "success",
-        message: "تمت إضافة المنتج ومعالجة الصورة بنجاح!",
-      });
-      formRef.current?.reset(); // تفريغ الحقول بعد النجاح
-    } else {
-      setStatus({
-        type: "error",
-        message: result.error || "حدث خطأ غير معروف.",
-      });
-    }
-
-    setIsPending(false);
-  };
-
-  return (
-    <form
-      ref={formRef}
-      onSubmit={handleSubmit}
-      className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6"
-    >
-      {status.type && (
-        <div
-          className={`p-4 rounded-xl flex items-center gap-3 ${status.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
-        >
-          {status.type === "success" && <CheckCircle2 className="w-5 h-5" />}
-          <p className="font-medium">{status.message}</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            اسم المنتج
-          </label>
-          <input
-            type="text"
-            name="title"
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="مثال: iPhone 15"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            العلامة التجارية
-          </label>
-          <input
-            type="text"
-            name="brand"
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="مثال: Apple"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">السعر ($)</label>
-          <input
-            type="number"
-            step="0.01"
-            name="price"
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            سعر التخفيض (اختياري)
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            name="discount_price"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">القسم</label>
-        <select
-          name="category"
-          required
-          className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="phone">هواتف</option>
-          <option value="accessory">إكسسوارات</option>
-        </select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">الوصف</label>
-        <textarea
-          name="description"
-          rows={4}
-          className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="اكتب وصفاً مفصلاً للمنتج..."
-        ></textarea>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">صورة المنتج</label>
-        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors">
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            required
-            className="hidden"
-            id="product-image"
-          />
-          <label
-            htmlFor="product-image"
-            className="cursor-pointer flex flex-col items-center gap-2"
-          >
-            <ImagePlus className="w-10 h-10 text-gray-400" />
-            <span className="text-sm text-gray-600">
-              اضغط هنا لاختيار صورة من جهازك
-            </span>
-            <span className="text-xs text-gray-400">
-              سيتم ضغطها وتصغيرها تلقائياً
-            </span>
-          </label>
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2"
-      >
-        {isPending ? (
-          <>
-            <Loader2 className="w-6 h-6 animate-spin" />
-            <span>جاري الرفع والمعالجة...</span>
-          </>
-        ) : (
-          "إضافة المنتج"
-        )}
-      </button>
-    </form>
-  );
-}
-</file>
-
-<file path="src/domains/admin/components/AdminProductsList.tsx">
-// src/domains/admin/components/AdminProductsList.tsx
-"use client";
-
-import { useState } from "react";
-import {
-  updateProductQuickDetails,
-  deleteProductAction,
-} from "../products/actions";
-import Image from "next/image";
-import { Edit, Trash2, X, Check, Loader2 } from "lucide-react";
-
-export default function AdminProductsList({
-  initialProducts,
-}: {
-  initialProducts: any[];
-}) {
-  const [products, setProducts] = useState(initialProducts);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
-
-  // حالة النماذج المؤقتة للتعديل
-  const [editForm, setEditForm] = useState({
-    price: 0,
-    discount_price: "",
-    stock: 0,
-  });
-
-  const startEditing = (product: any) => {
-    setEditingId(product.id);
-    setEditForm({
-      price: product.price,
-      discount_price: product.discount_price
-        ? product.discount_price.toString()
-        : "",
-      stock: product.stock || 0,
-    });
-  };
-
-  const handleSave = async (productId: string) => {
-    setLoadingId(productId);
-
-    const discount = editForm.discount_price
-      ? parseFloat(editForm.discount_price)
-      : null;
-    const result = await updateProductQuickDetails(
-      productId,
-      editForm.price,
-      discount,
-      editForm.stock,
-    );
-
-    if (result.success) {
-      setProducts(
-        products.map((p) =>
-          p.id === productId
-            ? {
-                ...p,
-                price: editForm.price,
-                discount_price: discount,
-                stock: editForm.stock,
-              }
-            : p,
-        ),
-      );
-      setEditingId(null);
-    } else {
-      alert("حدث خطأ أثناء التحديث: " + result.error);
-    }
-    setLoadingId(null);
-  };
-
-  const handleDelete = async (productId: string) => {
-    if (!confirm("هل أنت متأكد أنك تريد حذف هذا المنتج نهائياً؟")) return;
-
-    setLoadingId(productId);
-    const result = await deleteProductAction(productId);
-
-    if (result.success) {
-      setProducts(products.filter((p) => p.id !== productId));
-    } else {
-      alert(result.error);
-    }
-    setLoadingId(null);
-  };
-
-  return (
-    <div className="space-y-4">
-      {products.map((product) => (
-        <div
-          key={product.id}
-          className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row p-4 gap-4 items-center"
-        >
-          <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden shrink-0">
-            <Image
-              src={product.image_urls?.[0] || "https://placehold.co/100"}
-              alt={product.title}
-              fill
-              className="object-cover"
-            />
-          </div>
-
-          <div className="flex-grow text-center md:text-right w-full">
-            <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">
-              {product.title}
-            </h3>
-            <p className="text-sm text-gray-500 mb-2">
-              {product.brand} -{" "}
-              {product.category === "phone" ? "هاتف" : "إكسسوار"}
-            </p>
-
-            {editingId === product.id ? (
-              <div className="bg-blue-50 p-3 rounded-xl grid grid-cols-3 gap-2 mt-2">
-                <div>
-                  <label className="text-xs text-gray-600 block mb-1">
-                    السعر
-                  </label>
-                  <input
-                    type="number"
-                    value={editForm.price}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        price: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full p-2 text-sm rounded border border-blue-200"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-600 block mb-1">
-                    الخصم (اختياري)
-                  </label>
-                  <input
-                    type="number"
-                    value={editForm.discount_price}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        discount_price: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 text-sm rounded border border-blue-200"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-600 block mb-1">
-                    المخزون
-                  </label>
-                  <input
-                    type="number"
-                    value={editForm.stock}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        stock: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-full p-2 text-sm rounded border border-blue-200"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm font-medium">
-                <span className="text-gray-900">السعر: {product.price} $</span>
-                {product.discount_price && (
-                  <span className="text-red-600">
-                    التخفيض: {product.discount_price} $
-                  </span>
-                )}
-                <span
-                  className={`px-2 py-1 rounded-md ${product.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-                >
-                  المخزون: {product.stock}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex md:flex-col gap-2 shrink-0">
-            {editingId === product.id ? (
-              <>
-                <button
-                  onClick={() => handleSave(product.id)}
-                  disabled={loadingId === product.id}
-                  className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition disabled:opacity-50 flex items-center justify-center"
-                >
-                  {loadingId === product.id ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Check className="w-5 h-5" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setEditingId(null)}
-                  className="bg-gray-200 text-gray-700 p-2 rounded-lg hover:bg-gray-300 transition flex items-center justify-center"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => startEditing(product)}
-                  className="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-100 transition flex items-center justify-center"
-                >
-                  <Edit className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(product.id)}
-                  disabled={loadingId === product.id}
-                  className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center"
-                >
-                  {loadingId === product.id ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-5 h-5" />
-                  )}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-</file>
-
-<file path="src/domains/admin/components/OrdersList.tsx">
-// src/domains/admin/components/OrdersList.tsx
-"use client";
-
-import { useState } from "react";
-import { updateOrderStatus } from "../orders/actions";
-import {
-  ChevronDown,
-  ChevronUp,
-  MapPin,
-  Phone,
-  User,
-  Package,
-  Clock,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
-
-// تعريف مبسط لشكل البيانات القادمة من الاستعلام
-type Order = any;
-
-export default function OrdersList({
-  initialOrders,
-}: {
-  initialOrders: Order[];
-}) {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
-
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  const handleStatusChange = async (orderId: string, newStatus: string) => {
-    setLoadingId(orderId);
-    const result = await updateOrderStatus(orderId, newStatus);
-
-    if (result.success) {
-      setOrders(
-        orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
-      );
-    } else {
-      alert("حدث خطأ أثناء تحديث الحالة");
-    }
-    setLoadingId(null);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return (
-          <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-            <Clock className="w-3 h-3" /> قيد الانتظار
-          </span>
-        );
-      case "completed":
-        return (
-          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-            <CheckCircle className="w-3 h-3" /> مكتمل
-          </span>
-        );
-      case "cancelled":
-        return (
-          <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-            <XCircle className="w-3 h-3" /> ملغي
-          </span>
-        );
-      default:
-        return (
-          <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-bold">
-            {status}
-          </span>
-        );
-    }
-  };
-
-  if (orders.length === 0) {
-    return (
-      <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 text-gray-500">
-        لا توجد طلبات حتى الآن.
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {orders.map((order) => (
-        <div
-          key={order.id}
-          className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all"
-        >
-          {/* رأس البطاقة (الجزء الظاهر دائماً) */}
-          <div
-            onClick={() => toggleExpand(order.id)}
-            className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 p-3 rounded-xl text-blue-600">
-                <Package className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900">
-                  {order.customer_name}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {new Date(order.created_at).toLocaleDateString("ar-EG")} -{" "}
-                  {order.total_price} $
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
-              {getStatusBadge(order.status)}
-              {expandedId === order.id ? (
-                <ChevronUp className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              )}
-            </div>
-          </div>
-
-          {/* تفاصيل البطاقة (تظهر عند التمدد) */}
-          {expandedId === order.id && (
-            <div className="p-5 border-t border-gray-100 bg-gray-50/50">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* معلومات العميل */}
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">
-                    بيانات العميل
-                  </h4>
-                  <p className="flex items-center gap-2 text-sm text-gray-600">
-                    <User className="w-4 h-4 text-blue-500" />{" "}
-                    {order.customer_name}
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="w-4 h-4 text-blue-500" />{" "}
-                    {order.customer_phone}
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 text-blue-500" />
-                    {order.delivery_method === "delivery"
-                      ? order.address
-                      : "استلام من المحل"}
-                  </p>
-                </div>
-
-                {/* المنتجات المطلوبة */}
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">
-                    المنتجات
-                  </h4>
-                  <ul className="space-y-2">
-                    {order.order_items.map((item: any, index: number) => (
-                      <li
-                        key={index}
-                        className="flex justify-between text-sm text-gray-600"
-                      >
-                        <span>
-                          {item.quantity}x{" "}
-                          {item.products?.title || "منتج محذوف"}
-                        </span>
-                        <span className="font-medium">
-                          {item.price_at_purchase} $
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="pt-2 flex justify-between font-bold text-gray-900">
-                    <span>الإجمالي:</span>
-                    <span>{order.total_price} $</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* أزرار الإجراءات */}
-              <div className="mt-6 flex flex-wrap gap-3">
-                <button
-                  disabled={
-                    loadingId === order.id || order.status === "completed"
-                  }
-                  onClick={() => handleStatusChange(order.id, "completed")}
-                  className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                >
-                  تحديد كمكتمل
-                </button>
-                <button
-                  disabled={
-                    loadingId === order.id || order.status === "cancelled"
-                  }
-                  onClick={() => handleStatusChange(order.id, "cancelled")}
-                  className="bg-red-50 hover:bg-red-100 text-red-600 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                >
-                  إلغاء الطلب
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-</file>
-
-<file path="src/domains/admin/components/TradeInList.tsx">
-// src/domains/admin/components/TradeInList.tsx
-"use client";
-
-import { useState } from "react";
-import { updateTradeInStatus } from "../trade-in/actions";
-import {
-  ChevronDown,
-  ChevronUp,
-  Phone,
-  User,
-  Smartphone,
-  Clock,
-  CheckCircle,
-  FileText,
-  BadgeDollarSign,
-} from "lucide-react";
-
-type TradeInRequest = any;
-
-export default function TradeInList({
-  initialRequests,
-}: {
-  initialRequests: TradeInRequest[];
-}) {
-  const [requests, setRequests] = useState<TradeInRequest[]>(initialRequests);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [estimatedValue, setEstimatedValue] = useState<string>("");
-
-  const toggleExpand = (id: string, currentVal: number | null) => {
-    setExpandedId(expandedId === id ? null : id);
-    setEstimatedValue(currentVal ? currentVal.toString() : ""); // تعبئة السعر السابق إن وجد
-  };
-
-  const handleStatusChange = async (requestId: string, newStatus: string) => {
-    setLoadingId(requestId);
-
-    // تحويل القيمة المدخلة إلى رقم
-    const val = estimatedValue ? parseFloat(estimatedValue) : undefined;
-
-    const result = await updateTradeInStatus(requestId, newStatus, val);
-
-    if (result.success) {
-      setRequests(
-        requests.map((r) =>
-          r.id === requestId
-            ? {
-                ...r,
-                status: newStatus,
-                estimated_value: val !== undefined ? val : r.estimated_value,
-              }
-            : r,
-        ),
-      );
-    } else {
-      alert("حدث خطأ أثناء تحديث الحالة");
-    }
-    setLoadingId(null);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return (
-          <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-            <Clock className="w-3 h-3" /> قيد المراجعة
-          </span>
-        );
-      case "reviewed":
-        return (
-          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-            <FileText className="w-3 h-3" /> تم التقييم
-          </span>
-        );
-      case "completed":
-        return (
-          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-            <CheckCircle className="w-3 h-3" /> مكتمل
-          </span>
-        );
-      default:
-        return (
-          <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-bold">
-            {status}
-          </span>
-        );
-    }
-  };
-
-  if (requests.length === 0) {
-    return (
-      <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 text-gray-500">
-        لا توجد طلبات استبدال حتى الآن.
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {requests.map((request) => (
-        <div
-          key={request.id}
-          className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all"
-        >
-          <div
-            onClick={() => toggleExpand(request.id, request.estimated_value)}
-            className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-50 p-3 rounded-xl text-blue-600">
-                <Smartphone className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900">
-                  {request.customer_name}
-                </h3>
-                <p className="text-sm text-gray-500">{request.device_model}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
-              {getStatusBadge(request.status)}
-              {expandedId === request.id ? (
-                <ChevronUp className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              )}
-            </div>
-          </div>
-
-          {expandedId === request.id && (
-            <div className="p-5 border-t border-gray-100 bg-gray-50/50">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">
-                    بيانات التواصل
-                  </h4>
-                  <p className="flex items-center gap-2 text-sm text-gray-600">
-                    <User className="w-4 h-4 text-blue-500" />{" "}
-                    {request.customer_name}
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="w-4 h-4 text-blue-500" />{" "}
-                    {request.customer_phone}
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-gray-400 mt-2">
-                    تاريخ الطلب:{" "}
-                    {new Date(request.created_at).toLocaleDateString("ar-EG")}
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">
-                    تفاصيل الجهاز
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">الموديل:</span>{" "}
-                    {request.device_model}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">الحالة:</span>{" "}
-                    {request.device_condition}
-                  </p>
-                  {request.estimated_value && (
-                    <p className="text-sm font-bold text-green-600 flex items-center gap-1">
-                      <BadgeDollarSign className="w-4 h-4" />
-                      السعر التقديري: {request.estimated_value} $
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* قسم التقييم وتحديث الحالة */}
-              <div className="bg-white p-4 rounded-xl border border-gray-200 flex flex-col md:flex-row gap-4 items-end">
-                <div className="w-full md:w-1/3 space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    السعر التقديري ($)
-                  </label>
-                  <input
-                    type="number"
-                    value={estimatedValue}
-                    onChange={(e) => setEstimatedValue(e.target.value)}
-                    placeholder="مثال: 150"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div>
-
-                <div className="flex gap-2 w-full md:w-auto">
-                  <button
-                    disabled={
-                      loadingId === request.id || request.status === "reviewed"
-                    }
-                    onClick={() => handleStatusChange(request.id, "reviewed")}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors w-full md:w-auto"
-                  >
-                    تم التقييم
-                  </button>
-                  <button
-                    disabled={
-                      loadingId === request.id || request.status === "completed"
-                    }
-                    onClick={() => handleStatusChange(request.id, "completed")}
-                    className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors w-full md:w-auto"
-                  >
-                    إنهاء المعاملة
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
 }
 </file>
 
@@ -1863,366 +809,35 @@ export async function updateTradeInStatus(requestId: string, newStatus: string, 
 }
 </file>
 
-<file path="src/domains/cart/components/CheckoutForm.tsx">
-// src/domains/cart/components/CheckoutForm.tsx
-"use client";
-
-import { useState } from "react";
-import { useCartStore } from "../store";
-import { createOrderAction } from "@/domains/orders/actions";
-import { Loader2, CheckCircle2, Store, Truck } from "lucide-react";
-import Link from "next/link";
-
-export default function CheckoutForm() {
-  const { items, clearCart } = useCartStore();
-  const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">(
-    "delivery",
-  );
-  const [isPending, setIsPending] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
-
-  const totalPrice = items.reduce((total, item) => {
-    const price = item.discount_price ?? item.price;
-    return total + price * item.quantity;
-  }, 0);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsPending(true);
-
-    const formData = new FormData(e.currentTarget);
-
-    const result = await createOrderAction({
-      customer_name: formData.get("customer_name") as string,
-      customer_phone: formData.get("customer_phone") as string,
-      delivery_method: deliveryMethod,
-      address: formData.get("address") as string,
-      total_price: totalPrice,
-      items: items,
-    });
-
-    if (result.success) {
-      setIsSuccess(true);
-      setOrderId(result.orderId || null);
-      clearCart(); // إفراغ السلة بعد نجاح الطلب
-    } else {
-      alert("حدث خطأ أثناء إنشاء الطلب، يرجى المحاولة مرة أخرى.");
-    }
-
-    setIsPending(false);
-  };
-
-  // واجهة النجاح
-  if (isSuccess) {
-    return (
-      <div className="bg-white rounded-2xl p-8 text-center border border-green-100 shadow-sm mt-8">
-        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          تم استلام طلبك بنجاح!
-        </h2>
-        <p className="text-gray-600 mb-6">
-          رقم الطلب الخاص بك:{" "}
-          <span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">
-            {orderId?.slice(0, 8)}
-          </span>
-        </p>
-
-        <Link
-          href="/"
-          className="inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition-colors"
-        >
-          العودة للرئيسية
-        </Link>
-      </div>
-    );
-  }
-
-  // واجهة الدفع
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6 mt-8"
-    >
-      <h2 className="text-xl font-bold text-gray-900 border-b border-gray-100 pb-4">
-        بيانات الاستلام
-      </h2>
-
-      {/* اختيار طريقة الاستلام */}
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          type="button"
-          onClick={() => setDeliveryMethod("delivery")}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${deliveryMethod === "delivery" ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}
-        >
-          <Truck className="w-6 h-6" />
-          <span className="font-medium">توصيل للمنزل</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setDeliveryMethod("pickup")}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${deliveryMethod === "pickup" ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}
-        >
-          <Store className="w-6 h-6" />
-          <span className="font-medium">استلام من المحل</span>
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            الاسم الكريم
-          </label>
-          <input
-            type="text"
-            name="customer_name"
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="أدخل اسمك"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            رقم الهاتف
-          </label>
-          <input
-            type="tel"
-            name="customer_phone"
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="رقم للتواصل"
-          />
-        </div>
-      </div>
-
-      {deliveryMethod === "delivery" && (
-        <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-          <label className="text-sm font-medium text-gray-700">
-            عنوان التوصيل بالتفصيل
-          </label>
-          <textarea
-            name="address"
-            required
-            rows={3}
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="المدينة، المنطقة، القطعة، الشارع، رقم المنزل..."
-          ></textarea>
-        </div>
-      )}
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2"
-      >
-        {isPending ? (
-          <>
-            <Loader2 className="w-6 h-6 animate-spin" />
-            <span>جاري تأكيد الطلب...</span>
-          </>
-        ) : (
-          `تأكيد الطلب (${totalPrice} $) - الدفع عند الاستلام`
-        )}
-      </button>
-    </form>
-  );
-}
-</file>
-
-<file path="src/domains/products/components/AddToCartButton.tsx">
-// src/domains/products/components/AddToCartButton.tsx
+<file path="src/domains/products/components/AddToCartIcon.tsx">
+// src/domains/products/components/AddToCartIcon.tsx
 "use client";
 
 import { ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/domains/cart/store";
 import { Product } from "../types";
-import toast from "react-hot-toast"; // استيراد دالة الإشعار
+import toast from "react-hot-toast";
 
-interface AddToCartButtonProps {
-  product: Product;
-}
-
-export default function AddToCartButton({ product }: AddToCartButtonProps) {
+export default function AddToCartIcon({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
 
-  const handleAddToCart = () => {
+  const handleAdd = (e: React.MouseEvent) => {
+    e.preventDefault(); // يمنع فتح صفحة المنتج عند الضغط على الزر
+    e.stopPropagation(); 
     addItem(product);
-    
-    // إطلاق الإشعار المنبثق
-    toast.success(`تمت إضافة ${product.title} للسلة بنجاح!`, {
+    toast.success(`تمت إضافة ${product.title} للسلة!`, {
       icon: '🛒',
-      duration: 3000,
     });
   };
 
   return (
     <button
-      onClick={handleAddToCart}
-      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98]"
+      onClick={handleAdd}
+      className="bg-blue-50 text-blue-600 p-2.5 rounded-lg hover:bg-blue-600 hover:text-white transition-colors active:scale-95"
+      aria-label="أضف إلى السلة"
     >
-      <ShoppingCart className="w-6 h-6" />
-      <span>إضافة إلى السلة</span>
+      <ShoppingCart className="w-5 h-5" />
     </button>
-  );
-}
-</file>
-
-<file path="src/domains/products/components/ProductCard.tsx">
-// src/domains/products/components/ProductCard.tsx
-import Image from "next/image";
-import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
-import { Product } from "../types";
-
-interface ProductCardProps {
-  product: Product;
-}
-
-export default function ProductCard({ product }: ProductCardProps) {
-  // إذا لم تكن هناك صورة، نعرض صورة افتراضية
-  const imageUrl =
-    product.image_urls && product.image_urls.length > 0
-      ? product.image_urls[0]
-      : "https://placehold.co/300x400/eeeeee/999999?text=No+Image";
-
-  // التحقق مما إذا كان هناك تخفيض صالح
-  const hasDiscount =
-    product.discount_price !== null && product.discount_price < product.price;
-
-  return (
-    <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col">
-      {/* صورة المنتج */}
-      <Link
-        href={`/product/${product.id}`}
-        className="relative aspect-[3/4] bg-gray-50 overflow-hidden block"
-      >
-        {hasDiscount && (
-          <div className="absolute top-3 right-3 z-10 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
-            تخفيض
-          </div>
-        )}
-        <Image
-          src={imageUrl}
-          alt={product.title}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
-      </Link>
-
-      {/* تفاصيل المنتج */}
-      <div className="p-4 flex flex-col flex-grow">
-        <Link href={`/product/${product.id}`}>
-          <h3 className="font-semibold text-gray-800 line-clamp-2 hover:text-blue-600 transition-colors">
-            {product.title}
-          </h3>
-        </Link>
-
-        <p className="text-sm text-gray-500 mt-1">{product.brand}</p>
-
-        <div className="mt-auto pt-4 flex items-center justify-between">
-          <div className="flex flex-col">
-            {hasDiscount ? (
-              <>
-                <span className="text-lg font-bold text-red-600">
-                  {product.discount_price} $
-                </span>
-                <span className="text-xs text-gray-400 line-through">
-                  {product.price} $
-                </span>
-              </>
-            ) : (
-              <span className="text-lg font-bold text-gray-900">
-                {product.price} $
-              </span>
-            )}
-          </div>
-
-          <button
-            className="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-colors"
-            aria-label="أضف إلى السلة"
-          >
-            <ShoppingCart className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="src/domains/products/components/SmartBundle.tsx">
-// src/domains/products/components/SmartBundle.tsx
-"use client";
-
-import Image from "next/image";
-import { Plus } from "lucide-react";
-import { useCartStore } from "@/domains/cart/store";
-import { Product } from "../types";
-import toast from "react-hot-toast";
-
-interface SmartBundleProps {
-  mainProduct: Product;
-  bundle: {
-    bundle_price: number;
-    accessory: Product;
-  };
-}
-
-export default function SmartBundle({ mainProduct, bundle }: SmartBundleProps) {
-  const addBundle = useCartStore((state) => state.addBundle);
-
-  const mainPrice = mainProduct.discount_price ?? mainProduct.price;
-  const accessoryPrice = bundle.accessory.discount_price ?? bundle.accessory.price;
-  const oldTotalPrice = mainPrice + accessoryPrice;
-  const savings = oldTotalPrice - bundle.bundle_price;
-
-  const handleAddBundle = () => {
-    addBundle(mainProduct, bundle.accessory, bundle.bundle_price);
-    
-    // إشعار احترافي للحزمة
-    toast.success("تمت إضافة الحزمة الذكية للسلة، استمتع بالخصم!", {
-      icon: '🎁',
-      duration: 3500,
-    });
-  };
-
-  return (
-    <div className="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-3xl p-6 md:p-8">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-        
-        <div className="flex-grow">
-          <div className="inline-block bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
-            وفر {savings} $ مع هذه الحزمة
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">اشترِ معاً ووفر أكثر!</h3>
-          <p className="text-gray-600 mb-6">احصل على {bundle.accessory.title} بسعر خيالي عند شرائه مع هذا الهاتف.</p>
-          
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-white rounded-xl border border-gray-200 p-2 relative">
-              <Image src={mainProduct.image_urls?.[0] || 'https://placehold.co/100'} alt="phone" fill className="object-contain p-2" />
-            </div>
-            <Plus className="w-6 h-6 text-blue-400" />
-            <div className="w-20 h-20 bg-white rounded-xl border border-gray-200 p-2 relative">
-              <Image src={bundle.accessory.image_urls?.[0] || 'https://placehold.co/100'} alt="accessory" fill className="object-contain p-2" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm text-center min-w-[250px]">
-          <div className="text-gray-400 line-through mb-1">بدلاً من {oldTotalPrice} $</div>
-          <div className="text-3xl font-bold text-blue-700 mb-4">{bundle.bundle_price} $</div>
-          
-          <button 
-            onClick={handleAddBundle}
-            className="w-full font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white active:scale-[0.98]"
-          >
-            إضافة الحزمة للسلة
-          </button>
-        </div>
-
-      </div>
-    </div>
   );
 }
 </file>
@@ -2450,6 +1065,63 @@ export default function InstallPWA() {
 }
 </file>
 
+<file path="src/shared/components/StoreLayoutWrapper.tsx">
+// src/shared/components/StoreLayoutWrapper.tsx
+"use client";
+
+import { usePathname } from "next/navigation";
+import Header from "./Header";
+import WhatsAppButton from "./WhatsAppButton";
+
+export default function StoreLayoutWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  // التحقق مما إذا كان الرابط هو لوحة الإدارة
+  const isAdmin = pathname.startsWith("/admin");
+
+  return (
+    <>
+      {/* الترويسة تظهر فقط إذا لم نكن في لوحة الإدارة */}
+      {!isAdmin && <Header />}
+      
+      <main className="flex-grow container mx-auto px-4 py-8">
+        {children}
+      </main>
+
+      {/* زر الواتساب يظهر فقط إذا لم نكن في لوحة الإدارة */}
+      {!isAdmin && <WhatsAppButton />}
+    </>
+  );
+}
+</file>
+
+<file path="src/shared/components/WhatsAppButton.tsx">
+// src/shared/components/WhatsAppButton.tsx
+"use client";
+
+import { MessageCircle } from "lucide-react";
+
+export default function WhatsAppButton() {
+  return (
+    <a
+      href="https://wa.me/96500000000" // ضع رقم المركز هنا بدلاً من الأصفار
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed bottom-6 right-6 z-50 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 hover:scale-110 transition-all duration-300 flex items-center justify-center group"
+      aria-label="تواصل معنا عبر واتساب"
+    >
+      <MessageCircle className="w-7 h-7" />
+      <span className="absolute right-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+        تواصل معنا
+      </span>
+    </a>
+  );
+}
+</file>
+
 <file path="tsconfig.json">
 {
   "compilerOptions": {
@@ -2521,84 +1193,233 @@ const nextConfig: NextConfig = {
 export default withPWA(nextConfig);
 </file>
 
-<file path="package.json">
-{
-  "name": "mobile-shop-pwa",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@ducanh2912/next-pwa": "^10.2.9",
-    "@supabase/ssr": "^0.12.0",
-    "@supabase/supabase-js": "^2.108.2",
-    "lucide-react": "^1.21.0",
-    "next": "16.2.9",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-hot-toast": "^2.6.0",
-    "sharp": "^0.35.2",
-    "zustand": "^5.0.14"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.9",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  },
-  "pnpm": {
-    "approvedBuilds": {
-      "sharp": true,
-      "@ducanh2912/next-pwa": true
-    }
-  }
+<file path="src/app/admin/page.tsx">
+// src/app/admin/page.tsx
+import { getDashboardStats } from "@/domains/admin/dashboard/actions";
+import {
+  DollarSign,
+  ShoppingBag,
+  RefreshCw,
+  Smartphone,
+  ArrowLeft,
+} from "lucide-react";
+import Link from "next/link";
+
+// تحديث فوري للإحصائيات في كل مرة تفتح فيها الصفحة
+export const revalidate = 0;
+
+export default async function AdminDashboardPage() {
+  const { stats } = await getDashboardStats();
+
+  return (
+    <div className="space-y-8 pb-10">
+      <div className="border-b border-gray-200 pb-4">
+        <h1 className="text-3xl font-bold text-gray-900">نظرة عامة</h1>
+        <p className="text-gray-500 mt-2">
+          مرحباً بك في لوحة تحكم متجر موبايلي. إليك ملخص أداء المتجر.
+        </p>
+      </div>
+
+      {/* شبكة البطاقات الإحصائية */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* بطاقة المبيعات */}
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 text-white shadow-sm relative overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-green-100 text-sm font-medium mb-1">
+              إجمالي المبيعات (المكتملة)
+            </p>
+            <h3 className="text-4xl font-bold">
+              {stats?.totalSales} <span className="text-xl">$</span>
+            </h3>
+          </div>
+          <DollarSign className="absolute left-[-20px] bottom-[-20px] w-32 h-32 text-white/10" />
+        </div>
+
+        {/* بطاقة الطلبات الجديدة */}
+        <Link
+          href="/admin/orders"
+          className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between"
+        >
+          <div className="flex justify-between items-start mb-4">
+            <div className="bg-blue-100 p-3 rounded-xl text-blue-600">
+              <ShoppingBag className="w-6 h-6" />
+            </div>
+            <ArrowLeft className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-gray-900 mb-1">
+              {stats?.pendingOrders}
+            </h3>
+            <p className="text-gray-500 text-sm">طلبات بانتظار التنفيذ</p>
+          </div>
+        </Link>
+
+        {/* بطاقة طلبات الاستبدال */}
+        <Link
+          href="/admin/trade-in"
+          className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between"
+        >
+          <div className="flex justify-between items-start mb-4">
+            <div className="bg-purple-100 p-3 rounded-xl text-purple-600">
+              <RefreshCw className="w-6 h-6" />
+            </div>
+            <ArrowLeft className="w-5 h-5 text-gray-300 group-hover:text-purple-500 transition-colors" />
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-gray-900 mb-1">
+              {stats?.pendingTradeIns}
+            </h3>
+            <p className="text-gray-500 text-sm">طلبات استبدال للمراجعة</p>
+          </div>
+        </Link>
+
+        {/* بطاقة المنتجات */}
+        <Link
+          href="/admin/products/new"
+          className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between"
+        >
+          <div className="flex justify-between items-start mb-4">
+            <div className="bg-orange-100 p-3 rounded-xl text-orange-600">
+              <Smartphone className="w-6 h-6" />
+            </div>
+            <ArrowLeft className="w-5 h-5 text-gray-300 group-hover:text-orange-500 transition-colors" />
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-gray-900 mb-1">
+              {stats?.totalProducts}
+            </h3>
+            <p className="text-gray-500 text-sm">إجمالي المنتجات المعروضة</p>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
 }
 </file>
 
-<file path="src/app/offers/page.tsx">
-// src/app/offers/page.tsx
-import { getProducts } from "@/domains/products/queries";
-import ProductCard from "@/domains/products/components/ProductCard";
+<file path="src/app/globals.css">
+@import "tailwindcss";
 
-export const revalidate = 60; 
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+}
 
-export default async function OffersPage() {
-  const allProducts = await getProducts();
-  
-  // فلترة المنتجات التي تحتوي على سعر تخفيض وأقل من السعر الأصلي
-  const offers = allProducts.filter(
-    (product) => product.discount_price !== null && product.discount_price < product.price
-  );
-  
+html, body {
+  background-color: #ffffff !important;
+  color: #111827;
+}
+</file>
+
+<file path="src/app/trade-in/page.tsx">
+// src/app/trade-in/page.tsx
+"use client";
+
+import { useState } from "react";
+import { createTradeInRequest } from "@/domains/trade-in/actions";
+import { Loader2, CheckCircle2, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import toast from "react-hot-toast";
+
+export default function TradeInPage() {
+  const [isPending, setIsPending] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+
+    const formData = new FormData(e.currentTarget);
+    
+    const result = await createTradeInRequest({
+      customer_name: formData.get("customer_name") as string,
+      customer_phone: formData.get("customer_phone") as string,
+      device_model: formData.get("device_model") as string,
+      device_condition: formData.get("device_condition") as string,
+    });
+
+    if (result.success) {
+      setIsSuccess(true);
+      toast.success("تم إرسال الطلب بنجاح!");
+    } else {
+      toast.error("حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى.");
+    }
+    
+    setIsPending(false);
+  };
+
+  if (isSuccess) {
+    return (
+      <div className="max-w-2xl mx-auto text-center bg-white rounded-[2.5rem] p-12 shadow-sm border border-gray-100 mt-10">
+        <div className="bg-green-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-12 h-12 text-green-500" />
+        </div>
+        <h2 className="text-3xl font-black text-gray-900 mb-4">تم استلام طلبك بنجاح</h2>
+        <p className="text-gray-500 mb-10 text-lg leading-relaxed">
+          سيقوم فريقنا بتقييم جهازك والتواصل معك في أقرب وقت لتقديم أفضل سعر استبدال.
+        </p>
+        <Link href="/" className="inline-block bg-gray-900 text-white font-bold py-4 px-10 rounded-xl hover:bg-black transition-colors active:scale-95">
+          العودة للتسوق
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      <div className="bg-red-50 text-red-700 rounded-3xl p-8 text-center border border-red-100">
-        <h1 className="text-3xl font-bold mb-2">عروض حصرية 🔥</h1>
-        <p className="text-red-600">اغتنم الفرصة واحصل على أفضل الأجهزة بأسعار مخفضة لفترة محدودة.</p>
+    <div className="max-w-3xl mx-auto space-y-12 pb-12">
+      
+      {/* الترويسة الأنيقة */}
+      <div className="text-center space-y-6 pt-8">
+        <div className="inline-flex items-center justify-center p-4 bg-gray-50 text-gray-900 rounded-2xl mb-2 border border-gray-100">
+          <RefreshCw className="w-8 h-8" />
+        </div>
+        <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">استبدال الأجهزة</h1>
+        <p className="text-gray-500 text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
+          هل ترغب في ترقية هاتفك؟ املأ النموذج أدناه وسنقوم بتقييم جهازك القديم وإعطائك خصماً لاستبداله بجهاز جديد.
+        </p>
       </div>
 
-      <section>
-        {offers.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            لا توجد عروض حالياً، عد قريباً!
+      {/* النموذج الفاخر */}
+      <form onSubmit={handleSubmit} className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-200 via-gray-400 to-gray-200 opacity-50"></div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <label className="text-sm font-bold text-gray-700">الاسم الكريم</label>
+            <input type="text" name="customer_name" required className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all" placeholder="أدخل اسمك" />
           </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {offers.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          <div className="space-y-3">
+            <label className="text-sm font-bold text-gray-700">رقم الهاتف</label>
+            <input type="tel" name="customer_phone" required className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all" placeholder="مثال: 90000000" />
           </div>
-        )}
-      </section>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-sm font-bold text-gray-700">نوع الجهاز وموديله (القديم)</label>
+          <input type="text" name="device_model" required className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all" placeholder="مثال: iPhone 13 Pro Max" />
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-sm font-bold text-gray-700">حالة الجهاز</label>
+          <select name="device_condition" required className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all appearance-none">
+            <option value="ممتاز (كالجديد)">ممتاز (كالجديد)</option>
+            <option value="جيد (خدوش بسيطة)">جيد (خدوش بسيطة)</option>
+            <option value="متوسط (خدوش واضحة)">متوسط (خدوش واضحة)</option>
+            <option value="شاشة مكسورة">شاشة مكسورة ولكن يعمل</option>
+          </select>
+        </div>
+
+        <button type="submit" disabled={isPending} className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-bold py-5 rounded-xl transition-all flex justify-center items-center gap-2 active:scale-95 text-lg mt-4">
+          {isPending ? (
+            <>
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <span>جاري إرسال الطلب...</span>
+            </>
+          ) : (
+            "إرسال الطلب للتقييم"
+          )}
+        </button>
+      </form>
     </div>
   );
 }
@@ -2832,148 +1653,202 @@ export async function createOrderAction(data: OrderData) {
 }
 </file>
 
-<file path="src/app/cart/page.tsx">
-// src/app/cart/page.tsx
+<file path="src/domains/products/components/ProductFilter.tsx">
+// src/domains/products/components/ProductFilter.tsx
 "use client";
 
-import { useCartStore } from "@/domains/cart/store";
-import Image from "next/image";
-import Link from "next/link";
-import { Trash2, ArrowRight } from "lucide-react";
-import { useEffect, useState } from "react";
-import CheckoutForm from "@/domains/cart/components/CheckoutForm";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Search, Smartphone, Headphones, LayoutGrid } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
-export default function CartPage() {
-  const { items, removeItem } = useCartStore();
-  const [mounted, setMounted] = useState(false);
+export default function ProductFilter() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
+  const currentCategory = searchParams.get("cat") || "all";
+  const isFirstRender = useRef(true); // لكي نمنع الفلتر من العمل عند التحميل الأول
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    // منع التحديث التلقائي في أول ثانية من تحميل الصفحة
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
 
-  if (!mounted) return null;
+    const timeoutId = setTimeout(() => {
+      // نأخذ القيم الحالية من الرابط مباشرة لكي لا نكسر التوجيه
+      const params = new URLSearchParams(window.location.search);
+      
+      if (searchTerm) {
+        params.set("q", searchTerm);
+      } else {
+        params.delete("q");
+      }
+      
+      router.replace(`/?${params.toString()}`, { scroll: false });
+    }, 400);
 
-  const totalPrice = items.reduce((total, item) => {
-    const price = item.discount_price ?? item.price;
-    return total + price * item.quantity;
-  }, 0);
+    return () => clearTimeout(timeoutId);
+    // راقب كلمة البحث فقط! (تجاهلنا الباقي عمداً لمنع خطأ التوجيه)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
 
-  if (items.length === 0) {
-    return (
-      <div className="text-center py-20">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">السلة فارغة</h1>
-        <p className="text-gray-500 mb-8">
-          لم تقم بإضافة أي منتجات إلى سلة المشتريات بعد.
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-        >
-          <ArrowRight className="w-5 h-5" />
-          <span>العودة للتسوق</span>
-        </Link>
-      </div>
-    );
-  }
+  const handleCategoryChange = (category: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (category !== "all") {
+      params.set("cat", category);
+    } else {
+      params.delete("cat");
+    }
+    router.replace(`/?${params.toString()}`, { scroll: false });
+  };
+
+  const categories = [
+    { id: "all", name: "الكل", icon: <LayoutGrid className="w-4 h-4" /> },
+    { id: "phone", name: "هواتف", icon: <Smartphone className="w-4 h-4" /> },
+    { id: "accessory", name: "إكسسوارات", icon: <Headphones className="w-4 h-4" /> },
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto pb-12">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8 border-r-4 border-blue-600 pr-3">
-        مراجعة الطلب
-      </h1>
-
-      {/* قائمة المنتجات في السلة */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0"
-          >
-            <div className="relative w-20 h-20 bg-gray-50 rounded-lg overflow-hidden shrink-0">
-              <Image
-                src={item.image_urls?.[0] || "https://placehold.co/100"}
-                alt={item.title}
-                fill
-                sizes="80px"
-                className="object-cover"
-              />
-            </div>
-            <div className="flex-grow">
-              <Link
-                href={`/product/${item.id}`}
-                className="font-semibold text-gray-800 hover:text-blue-600 line-clamp-1"
-              >
-                {item.title}
-              </Link>
-              <div className="text-sm text-gray-500 mt-1">
-                الكمية: {item.quantity}
-              </div>
-            </div>
-            <div className="font-bold text-gray-900">
-              {(item.discount_price ?? item.price) * item.quantity} $
-            </div>
-            <button
-              onClick={() => removeItem(item.id)}
-              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          </div>
-        ))}
-
-        <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-center text-lg">
-          <span className="font-bold text-gray-700">المجموع الكلي:</span>
-          <span className="text-2xl font-bold text-blue-700">
-            {totalPrice} $
-          </span>
+    <div className="space-y-6 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="relative max-w-2xl mx-auto">
+        <div className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none">
+          <Search className="w-5 h-5 text-gray-400" />
         </div>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-5 pr-14 py-4 bg-white border border-gray-200 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm text-gray-900"
+          placeholder="ابحث عن هاتف، سماعة، أو علامة تجارية..."
+        />
       </div>
 
-      {/* نموذج إتمام الطلب */}
-      <CheckoutForm />
+      <div className="flex items-center justify-start md:justify-center gap-3 overflow-x-auto pb-4 scrollbar-hide px-2">
+        {categories.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => handleCategoryChange(cat.id)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm whitespace-nowrap transition-all active:scale-95 ${
+              currentCategory === cat.id
+                ? "bg-gray-900 text-white shadow-md border border-gray-900"
+                : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            {cat.icon}
+            <span>{cat.name}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 </file>
 
-<file path="src/app/page.tsx">
-// src/app/page.tsx
+<file path="package.json">
+{
+  "name": "mobile-shop-pwa",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.108.2",
+    "lucide-react": "^1.21.0",
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hot-toast": "^2.6.0",
+    "sharp": "^0.35.2",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "pnpm": {
+    "approvedBuilds": {
+      "sharp": true,
+      "@ducanh2912/next-pwa": true
+    }
+  }
+}
+</file>
+
+<file path="src/app/offers/page.tsx">
+// src/app/offers/page.tsx
 import { getProducts } from "@/domains/products/queries";
 import ProductCard from "@/domains/products/components/ProductCard";
+import { Flame, ArrowRight, Tag } from "lucide-react";
+import Link from "next/link";
 
-// تحديث الصفحة كل 60 ثانية في حال تمت إضافة منتجات جديدة (ISR)
 export const revalidate = 60; 
 
-export default async function HomePage() {
-  const products = await getProducts();
+export default async function OffersPage() {
+  const allProducts = await getProducts();
+  const offers = allProducts.filter(
+    (product) => product.discount_price !== null && product.discount_price < product.price
+  );
 
   return (
-    <div className="space-y-10">
-      {/* بانر الترحيب */}
-      <section className="bg-blue-600 text-white rounded-3xl p-8 md:p-12 text-center">
-        <h1 className="text-3xl md:text-5xl font-bold mb-4">أهلاً بك في مركز الباسل</h1>
-        <p className="text-blue-100 text-lg md:text-xl max-w-2xl mx-auto">
-          اكتشف أحدث الهواتف الذكية وأفضل الإكسسوارات بأسعار لا تقبل المنافسة.
+    <div className="space-y-12 pb-12">
+      
+      {/* البانر التسويقي (الستايل الأبيض الجديد) */}
+      <section className="relative overflow-hidden bg-white border border-gray-100 rounded-[2.5rem] p-10 md:p-16 text-center shadow-sm">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-rose-400 to-red-500 opacity-80"></div>
+        
+        <div className="inline-flex items-center justify-center p-3 bg-red-50 text-red-600 rounded-full mb-6">
+          <Flame className="w-6 h-6" />
+        </div>
+
+        <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight text-gray-900 drop-shadow-sm">
+          عروض <span className="text-transparent bg-clip-text bg-gradient-to-l from-red-600 to-rose-400">حصرية</span>
+        </h1>
+        
+        <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          اغتنم الفرصة الآن! وفر أكثر مع تشكيلتنا المختارة من الهواتف الذكية والإكسسوارات بأسعار تنافسية قبل نفاد الكمية.
         </p>
       </section>
 
-      {/* قائمة المنتجات */}
+      {/* قسم عرض المنتجات */}
       <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 border-r-4 border-blue-600 pr-3">
-            أحدث المنتجات
-          </h2>
-        </div>
-        
-        {products.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
-            <p className="text-gray-500 text-lg">لا توجد منتجات مضافة حالياً في المتجر.</p>
+        {offers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-3xl border border-gray-100 shadow-sm text-center">
+            <div className="bg-gray-50 p-6 rounded-full mb-6 text-gray-400">
+              <Tag className="w-12 h-12" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">لا توجد عروض حالياً</h3>
+            <p className="text-gray-500 mb-6">نحن نقوم بتحديث عروضنا باستمرار. يرجى العودة لاحقاً!</p>
+            <Link href="/" className="inline-flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-xl font-bold transition-all active:scale-95">
+              <ArrowRight className="w-5 h-5" />
+              <span>العودة للمتجر</span>
+            </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          <div>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 border-r-4 border-red-500 pr-3">
+                المنتجات المخفضة
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {offers.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
           </div>
         )}
       </section>
@@ -2982,145 +1857,1065 @@ export default async function HomePage() {
 }
 </file>
 
-<file path="src/app/product/[id]/page.tsx">
-// src/app/product/[id]/page.tsx
-import { getProductById, getProductBundles } from "@/domains/products/queries";
-import { notFound } from "next/navigation";
+<file path="src/domains/admin/components/AddProductForm.tsx">
+// src/domains/admin/components/AddProductForm.tsx
+"use client";
+
+import { useState, useRef } from "react";
+import { addProductAction } from "../actions";
+import { ImagePlus, Loader2, X } from "lucide-react";
+import toast from "react-hot-toast";
 import Image from "next/image";
-import { ShieldCheck, Truck } from "lucide-react";
-import AddToCartButton from "@/domains/products/components/AddToCartButton";
-import SmartBundle from "@/domains/products/components/SmartBundle";
 
-export default async function ProductDetailsPage({
-  params,
+export default function AddProductForm() {
+  const [isPending, setIsPending] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // دالة لمعاينة الصورة عند اختيارها من الجهاز
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setImagePreview(imageUrl);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
+  // إزالة الصورة المختارة
+  const removeImage = () => {
+    setImagePreview(null);
+    if (formRef.current) {
+      const fileInput = formRef.current.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+
+    const formData = new FormData(e.currentTarget);
+    const result = await addProductAction(formData);
+
+    if (result.success) {
+      toast.success("تمت إضافة المنتج ومعالجة الصورة بنجاح!");
+      formRef.current?.reset();
+      setImagePreview(null); // مسح المعاينة بعد النجاح
+    } else {
+      toast.error(result.error || "حدث خطأ أثناء إضافة المنتج.");
+    }
+
+    setIsPending(false);
+  };
+
+  return (
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">اسم المنتج</label>
+          <input type="text" name="title" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: iPhone 15" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">العلامة التجارية</label>
+          <input type="text" name="brand" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: Apple" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">السعر ($)</label>
+          <input type="number" step="0.01" name="price" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">سعر التخفيض (اختياري)</label>
+          <input type="number" step="0.01" name="discount_price" className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">القسم</label>
+        <select name="category" required className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="phone">هواتف</option>
+          <option value="accessory">إكسسوارات</option>
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">الوصف</label>
+        <textarea name="description" rows={4} className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="اكتب وصفاً مفصلاً للمنتج..."></textarea>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">صورة المنتج</label>
+        <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors relative">
+          <input
+            type="file"
+            name="image"
+            accept="image/*"
+            required={!imagePreview} // الصورة مطلوبة فقط إذا لم يتم اختيارها بعد
+            className="hidden"
+            id="product-image"
+            onChange={handleImageChange}
+          />
+          
+          {imagePreview ? (
+            <div className="relative w-full max-w-[200px] aspect-[3/4] mx-auto rounded-lg overflow-hidden border border-gray-200">
+              <Image src={imagePreview} alt="معاينة" fill className="object-cover" />
+              <button 
+                type="button" 
+                onClick={removeImage}
+                className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-md"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <label htmlFor="product-image" className="cursor-pointer flex flex-col items-center gap-2 py-6">
+              <ImagePlus className="w-10 h-10 text-gray-400" />
+              <span className="text-sm text-gray-600">اضغط هنا لاختيار صورة من جهازك</span>
+              <span className="text-xs text-gray-400">سيتم ضغطها وتصغيرها تلقائياً</span>
+            </label>
+          )}
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-4 rounded-xl transition-colors flex justify-center items-center gap-2"
+      >
+        {isPending ? (
+          <>
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>جاري الرفع والمعالجة...</span>
+          </>
+        ) : (
+          "إضافة المنتج"
+        )}
+      </button>
+    </form>
+  );
+}
+</file>
+
+<file path="src/domains/admin/components/AdminProductsList.tsx">
+// src/domains/admin/components/AdminProductsList.tsx
+"use client";
+
+import { useState } from "react";
+import {
+  updateProductQuickDetails,
+  deleteProductAction,
+} from "../products/actions";
+import Image from "next/image";
+import { Edit, Trash2, X, Check, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
+
+export default function AdminProductsList({
+  initialProducts,
 }: {
-  params: Promise<{ id: string }>;
+  initialProducts: any[];
 }) {
-  const resolvedParams = await params;
+  const [products, setProducts] = useState(initialProducts);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  // جلب تفاصيل المنتج
-  const product = await getProductById(resolvedParams.id);
+  const [editForm, setEditForm] = useState({
+    price: 0,
+    discount_price: "",
+    stock: 0,
+  });
 
-  if (!product) {
-    notFound();
+  const startEditing = (product: any) => {
+    setEditingId(product.id);
+    setEditForm({
+      price: product.price,
+      discount_price: product.discount_price ? product.discount_price.toString() : "",
+      stock: product.stock || 0,
+    });
+  };
+
+  const handleSave = async (productId: string) => {
+    setLoadingId(productId);
+
+    const discount = editForm.discount_price ? parseFloat(editForm.discount_price) : null;
+    const result = await updateProductQuickDetails(productId, editForm.price, discount, editForm.stock);
+
+    if (result.success) {
+      setProducts(
+        products.map((p) =>
+          p.id === productId ? { ...p, price: editForm.price, discount_price: discount, stock: editForm.stock } : p
+        )
+      );
+      setEditingId(null);
+      toast.success("تم تحديث بيانات المنتج بنجاح!");
+    } else {
+      toast.error(result.error || "حدث خطأ أثناء التحديث.");
+    }
+    setLoadingId(null);
+  };
+
+  const handleDelete = async (productId: string) => {
+    if (!window.confirm("هل أنت متأكد أنك تريد حذف هذا المنتج نهائياً؟")) return;
+
+    setLoadingId(productId);
+    const result = await deleteProductAction(productId);
+
+    if (result.success) {
+      setProducts(products.filter((p) => p.id !== productId));
+      toast.success("تم حذف المنتج بنجاح.");
+    } else {
+      toast.error(result.error || "لا يمكن حذف المنتج.");
+    }
+    setLoadingId(null);
+  };
+
+  return (
+    <div className="space-y-4">
+      {products.map((product) => (
+        <div key={product.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row p-4 gap-4 items-center">
+          
+          <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden shrink-0">
+            {/* تمت إضافة sizes="96px" هنا لحل التحذير الأصفر */}
+            <Image
+              src={product.image_urls?.[0] || "https://placehold.co/100"}
+              alt={product.title}
+              fill
+              sizes="96px"
+              className="object-cover"
+            />
+          </div>
+
+          <div className="flex-grow text-center md:text-right w-full">
+            <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.title}</h3>
+            <p className="text-sm text-gray-500 mb-2">{product.brand} - {product.category === "phone" ? "هاتف" : "إكسسوار"}</p>
+
+            {editingId === product.id ? (
+              <div className="bg-blue-50 p-3 rounded-xl grid grid-cols-3 gap-2 mt-2">
+                <div>
+                  <label className="text-xs text-gray-600 block mb-1">السعر</label>
+                  <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: parseFloat(e.target.value) })} className="w-full p-2 text-sm rounded border border-blue-200" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-600 block mb-1">الخصم (اختياري)</label>
+                  <input type="number" value={editForm.discount_price} onChange={(e) => setEditForm({ ...editForm, discount_price: e.target.value })} className="w-full p-2 text-sm rounded border border-blue-200" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-600 block mb-1">المخزون</label>
+                  <input type="number" value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: parseInt(e.target.value) })} className="w-full p-2 text-sm rounded border border-blue-200" />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm font-medium">
+                <span className="text-gray-900">السعر: {product.price} $</span>
+                {product.discount_price && <span className="text-red-600">التخفيض: {product.discount_price} $</span>}
+                <span className={`px-2 py-1 rounded-md ${product.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  المخزون: {product.stock}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex md:flex-col gap-2 shrink-0">
+            {editingId === product.id ? (
+              <>
+                <button onClick={() => handleSave(product.id)} disabled={loadingId === product.id} className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition disabled:opacity-50 flex items-center justify-center">
+                  {loadingId === product.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                </button>
+                <button onClick={() => setEditingId(null)} className="bg-gray-200 text-gray-700 p-2 rounded-lg hover:bg-gray-300 transition flex items-center justify-center">
+                  <X className="w-5 h-5" />
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => startEditing(product)} className="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-100 transition flex items-center justify-center">
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button onClick={() => handleDelete(product.id)} disabled={loadingId === product.id} className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center">
+                  {loadingId === product.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/admin/components/OrdersList.tsx">
+// src/domains/admin/components/OrdersList.tsx
+"use client";
+
+import { useState } from "react";
+import { updateOrderStatus } from "../orders/actions";
+import {
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Phone,
+  User,
+  Package,
+  Clock,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+import toast from "react-hot-toast";
+
+// تعريف مبسط لشكل البيانات القادمة من الاستعلام
+type Order = any;
+
+export default function OrdersList({
+  initialOrders,
+}: {
+  initialOrders: Order[];
+}) {
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    setLoadingId(orderId);
+    const result = await updateOrderStatus(orderId, newStatus);
+
+    if (result.success) {
+      setOrders(
+        orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
+      );
+      toast.success("تم تحديث حالة الطلب بنجاح!");
+    } else {
+      toast.error("حدث خطأ أثناء تحديث الحالة.");
+    }
+    setLoadingId(null);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return (
+          <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+            <Clock className="w-3 h-3" /> قيد الانتظار
+          </span>
+        );
+      case "completed":
+        return (
+          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" /> مكتمل
+          </span>
+        );
+      case "cancelled":
+        return (
+          <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+            <XCircle className="w-3 h-3" /> ملغي
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-bold">
+            {status}
+          </span>
+        );
+    }
+  };
+
+  if (orders.length === 0) {
+    return (
+      <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 text-gray-500">
+        لا توجد طلبات حتى الآن.
+      </div>
+    );
   }
 
-  // جلب الحزم الذكية المرتبطة بهذا المنتج (إن وجدت)
-  const bundles = await getProductBundles(product.id);
-  const firstBundle = bundles?.[0]; // نأخذ العرض الأول فقط لعرضه
+  return (
+    <div className="space-y-4">
+      {orders.map((order) => (
+        <div
+          key={order.id}
+          className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all"
+        >
+          {/* رأس البطاقة (الجزء الظاهر دائماً) */}
+          <div
+            onClick={() => toggleExpand(order.id)}
+            className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-100 p-3 rounded-xl text-blue-600">
+                <Package className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">
+                  {order.customer_name}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {new Date(order.created_at).toLocaleDateString("ar-EG")} -{" "}
+                  {order.total_price} $
+                </p>
+              </div>
+            </div>
 
+            <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+              {getStatusBadge(order.status)}
+              {expandedId === order.id ? (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              )}
+            </div>
+          </div>
+
+          {/* تفاصيل البطاقة (تظهر عند التمدد) */}
+          {expandedId === order.id && (
+            <div className="p-5 border-t border-gray-100 bg-gray-50/50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* معلومات العميل */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">
+                    بيانات العميل
+                  </h4>
+                  <p className="flex items-center gap-2 text-sm text-gray-600">
+                    <User className="w-4 h-4 text-blue-500" />{" "}
+                    {order.customer_name}
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-gray-600">
+                    <Phone className="w-4 h-4 text-blue-500" />{" "}
+                    {order.customer_phone}
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-gray-600">
+                    <MapPin className="w-4 h-4 text-blue-500" />
+                    {order.delivery_method === "delivery"
+                      ? order.address
+                      : "استلام من المحل"}
+                  </p>
+                </div>
+
+                {/* المنتجات المطلوبة */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">
+                    المنتجات
+                  </h4>
+                  <ul className="space-y-2">
+                    {order.order_items.map((item: any, index: number) => (
+                      <li
+                        key={index}
+                        className="flex justify-between text-sm text-gray-600"
+                      >
+                        <span>
+                          {item.quantity}x{" "}
+                          {item.products?.title || "منتج محذوف"}
+                        </span>
+                        <span className="font-medium">
+                          {item.price_at_purchase} $
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="pt-2 flex justify-between font-bold text-gray-900">
+                    <span>الإجمالي:</span>
+                    <span>{order.total_price} $</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* أزرار الإجراءات */}
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  disabled={
+                    loadingId === order.id || order.status === "completed"
+                  }
+                  onClick={() => handleStatusChange(order.id, "completed")}
+                  className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                >
+                  تحديد كمكتمل
+                </button>
+                <button
+                  disabled={
+                    loadingId === order.id || order.status === "cancelled"
+                  }
+                  onClick={() => handleStatusChange(order.id, "cancelled")}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                >
+                  إلغاء الطلب
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/admin/components/TradeInList.tsx">
+// src/domains/admin/components/TradeInList.tsx
+"use client";
+
+import { useState } from "react";
+import { updateTradeInStatus } from "../trade-in/actions";
+import toast from "react-hot-toast";
+import {
+  ChevronDown,
+  ChevronUp,
+  Phone,
+  User,
+  Smartphone,
+  Clock,
+  CheckCircle,
+  FileText,
+  BadgeDollarSign,
+} from "lucide-react";
+
+type TradeInRequest = any;
+
+export default function TradeInList({
+  initialRequests,
+}: {
+  initialRequests: TradeInRequest[];
+}) {
+  const [requests, setRequests] = useState<TradeInRequest[]>(initialRequests);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [estimatedValue, setEstimatedValue] = useState<string>("");
+
+  const toggleExpand = (id: string, currentVal: number | null) => {
+    setExpandedId(expandedId === id ? null : id);
+    setEstimatedValue(currentVal ? currentVal.toString() : ""); // تعبئة السعر السابق إن وجد
+  };
+
+  const handleStatusChange = async (requestId: string, newStatus: string) => {
+    setLoadingId(requestId);
+    const val = estimatedValue ? parseFloat(estimatedValue) : undefined;
+    const result = await updateTradeInStatus(requestId, newStatus, val);
+
+    if (result.success) {
+      setRequests(
+        requests.map((r) =>
+          r.id === requestId
+            ? {
+                ...r,
+                status: newStatus,
+                estimated_value: val !== undefined ? val : r.estimated_value,
+              }
+            : r,
+        ),
+      );
+      toast.success("تم تحديث التقييم بنجاح!");
+    } else {
+      toast.error("حدث خطأ أثناء تحديث الحالة.");
+    }
+    setLoadingId(null);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return (
+          <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+            <Clock className="w-3 h-3" /> قيد المراجعة
+          </span>
+        );
+      case "reviewed":
+        return (
+          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+            <FileText className="w-3 h-3" /> تم التقييم
+          </span>
+        );
+      case "completed":
+        return (
+          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" /> مكتمل
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-bold">
+            {status}
+          </span>
+        );
+    }
+  };
+
+  if (requests.length === 0) {
+    return (
+      <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 text-gray-500">
+        لا توجد طلبات استبدال حتى الآن.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {requests.map((request) => (
+        <div
+          key={request.id}
+          className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all"
+        >
+          <div
+            onClick={() => toggleExpand(request.id, request.estimated_value)}
+            className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-50 p-3 rounded-xl text-blue-600">
+                <Smartphone className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">
+                  {request.customer_name}
+                </h3>
+                <p className="text-sm text-gray-500">{request.device_model}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+              {getStatusBadge(request.status)}
+              {expandedId === request.id ? (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              )}
+            </div>
+          </div>
+
+          {expandedId === request.id && (
+            <div className="p-5 border-t border-gray-100 bg-gray-50/50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">
+                    بيانات التواصل
+                  </h4>
+                  <p className="flex items-center gap-2 text-sm text-gray-600">
+                    <User className="w-4 h-4 text-blue-500" />{" "}
+                    {request.customer_name}
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-gray-600">
+                    <Phone className="w-4 h-4 text-blue-500" />{" "}
+                    {request.customer_phone}
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-gray-400 mt-2">
+                    تاريخ الطلب:{" "}
+                    {new Date(request.created_at).toLocaleDateString("ar-EG")}
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-2">
+                    تفاصيل الجهاز
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">الموديل:</span>{" "}
+                    {request.device_model}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">الحالة:</span>{" "}
+                    {request.device_condition}
+                  </p>
+                  {request.estimated_value && (
+                    <p className="text-sm font-bold text-green-600 flex items-center gap-1">
+                      <BadgeDollarSign className="w-4 h-4" />
+                      السعر التقديري: {request.estimated_value} $
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* قسم التقييم وتحديث الحالة */}
+              <div className="bg-white p-4 rounded-xl border border-gray-200 flex flex-col md:flex-row gap-4 items-end">
+                <div className="w-full md:w-1/3 space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    السعر التقديري ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={estimatedValue}
+                    onChange={(e) => setEstimatedValue(e.target.value)}
+                    placeholder="مثال: 150"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div className="flex gap-2 w-full md:w-auto">
+                  <button
+                    disabled={
+                      loadingId === request.id || request.status === "reviewed"
+                    }
+                    onClick={() => handleStatusChange(request.id, "reviewed")}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors w-full md:w-auto"
+                  >
+                    تم التقييم
+                  </button>
+                  <button
+                    disabled={
+                      loadingId === request.id || request.status === "completed"
+                    }
+                    onClick={() => handleStatusChange(request.id, "completed")}
+                    className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors w-full md:w-auto"
+                  >
+                    إنهاء المعاملة
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/products/components/AddToCartButton.tsx">
+// src/domains/products/components/AddToCartIcon.tsx
+"use client";
+
+import { ShoppingCart } from "lucide-react";
+import { useCartStore } from "@/domains/cart/store";
+import { Product } from "../types";
+import toast from "react-hot-toast";
+
+export default function AddToCartIcon({ product }: { product: Product }) {
+  const addItem = useCartStore((state) => state.addItem);
+
+  const handleAdd = (e: React.MouseEvent) => {
+    e.preventDefault(); // يمنع فتح صفحة المنتج عند الضغط على الزر
+    e.stopPropagation(); 
+    addItem(product);
+    toast.success(`تمت إضافة ${product.title} للسلة!`, {
+      icon: '🛒',
+    });
+  };
+
+  return (
+    <button
+      onClick={handleAdd}
+      className="bg-blue-50 text-blue-600 p-2.5 rounded-lg hover:bg-blue-600 hover:text-white transition-colors active:scale-95"
+      aria-label="أضف إلى السلة"
+    >
+      <ShoppingCart className="w-5 h-5" />
+    </button>
+  );
+}
+</file>
+
+<file path="src/domains/products/components/ProductCard.tsx">
+// src/domains/products/components/ProductCard.tsx
+import Image from "next/image";
+import Link from "next/link";
+import { Product } from "../types";
+import AddToCartIcon from "./AddToCartIcon"; // استيراد الزر التفاعلي
+
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
   const imageUrl =
     product.image_urls && product.image_urls.length > 0
       ? product.image_urls[0]
-      : "https://placehold.co/600x800/eeeeee/999999?text=No+Image";
+      : "https://placehold.co/300x400/eeeeee/999999?text=No+Image";
 
   const hasDiscount =
     product.discount_price !== null && product.discount_price < product.price;
 
   return (
-    <div className="space-y-8">
-      {/* البطاقة الرئيسية للمنتج */}
-      <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {/* قسم الصورة */}
-          <div className="relative aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden border border-gray-100">
-            {hasDiscount && (
-              <div className="absolute top-4 right-4 z-10 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-lg shadow-md">
-                تخفيض خاص
-              </div>
-            )}
-            <Image
-              src={imageUrl}
-              alt={product.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
-            />
+    <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col">
+      <Link
+        href={`/product/${product.id}`}
+        className="relative aspect-[3/4] bg-gray-50 overflow-hidden block"
+      >
+        {hasDiscount && (
+          <div className="absolute top-3 right-3 z-10 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+            تخفيض
           </div>
+        )}
+        <Image
+          src={imageUrl}
+          alt={product.title}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+      </Link>
 
-          {/* قسم التفاصيل */}
+      <div className="p-4 flex flex-col flex-grow">
+        <Link href={`/product/${product.id}`}>
+          <h3 className="font-semibold text-gray-800 line-clamp-2 hover:text-blue-600 transition-colors">
+            {product.title}
+          </h3>
+        </Link>
+        <p className="text-sm text-gray-500 mt-1">{product.brand}</p>
+
+        <div className="mt-auto pt-4 flex items-center justify-between">
           <div className="flex flex-col">
-            <div className="mb-2 text-blue-600 font-semibold text-sm">
-              {product.brand}
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              {product.title}
-            </h1>
-
-            <div className="mb-6 pb-6 border-b border-gray-100">
-              {hasDiscount ? (
-                <div className="flex items-end gap-3">
-                  <span className="text-4xl font-bold text-red-600">
-                    {product.discount_price} $
-                  </span>
-                  <span className="text-lg text-gray-400 line-through mb-1">
-                    {product.price} $
-                  </span>
-                </div>
-              ) : (
-                <span className="text-4xl font-bold text-gray-900">
-                  {product.price} $
-                </span>
-              )}
-            </div>
-
-            <p className="text-gray-600 text-lg leading-relaxed mb-8">
-              {product.description || "لا يوجد وصف متاح لهذا المنتج."}
-            </p>
-
-            {/* المواصفات إن وجدت */}
-            {product.specs && (
-              <div className="mb-8 bg-gray-50 p-4 rounded-xl">
-                <h3 className="font-semibold text-gray-900 mb-3">
-                  المواصفات الرئيسية:
-                </h3>
-                <ul className="space-y-2">
-                  {Object.entries(product.specs).map(([key, value]) => (
-                    <li
-                      key={key}
-                      className="flex items-center text-gray-600 text-sm"
-                    >
-                      <span className="w-24 font-medium text-gray-800 capitalize">
-                        {key}:
-                      </span>
-                      <span>{String(value)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            {hasDiscount ? (
+              <>
+                <span className="text-lg font-bold text-red-600">{product.discount_price} $</span>
+                <span className="text-xs text-gray-400 line-through">{product.price} $</span>
+              </>
+            ) : (
+              <span className="text-lg font-bold text-gray-900">{product.price} $</span>
             )}
+          </div>
+          {/* الزر السحري الجديد يعمل هنا */}
+          <AddToCartIcon product={product} />
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
 
-            {/* أزرار الإجراءات والمميزات */}
-            <div className="mt-auto space-y-4">
-              <AddToCartButton product={product} />
+<file path="src/domains/products/components/SmartBundle.tsx">
+// src/domains/products/components/SmartBundle.tsx
+"use client";
 
-              <div className="flex items-center justify-center gap-6 text-sm text-gray-500 pt-4">
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-5 h-5 text-green-500" />
-                  <span>ضمان الوكيل</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Truck className="w-5 h-5 text-blue-500" />
-                  <span>توصيل سريع</span>
-                </div>
-              </div>
+import Image from "next/image";
+import { Plus } from "lucide-react";
+import { useCartStore } from "@/domains/cart/store";
+import { Product } from "../types";
+import toast from "react-hot-toast";
+
+interface SmartBundleProps {
+  mainProduct: Product;
+  bundle: {
+    bundle_price: number;
+    accessory: Product;
+  };
+}
+
+export default function SmartBundle({ mainProduct, bundle }: SmartBundleProps) {
+  const addBundle = useCartStore((state) => state.addBundle);
+
+  const mainPrice = mainProduct.discount_price ?? mainProduct.price;
+  const accessoryPrice = bundle.accessory.discount_price ?? bundle.accessory.price;
+  const oldTotalPrice = mainPrice + accessoryPrice;
+  const savings = oldTotalPrice - bundle.bundle_price;
+
+  const handleAddBundle = () => {
+    addBundle(mainProduct, bundle.accessory, bundle.bundle_price);
+    toast.success("تمت إضافة الحزمة الذكية للسلة، استمتع بالخصم!", {
+      icon: '🎁',
+      duration: 3500,
+    });
+  };
+
+  return (
+    <div className="mt-16 bg-white border border-blue-100 shadow-sm rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden">
+      {/* خط ديكور علوي أزرق */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-cyan-400"></div>
+      
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
+        
+        <div className="flex-grow text-center lg:text-right">
+          <div className="inline-block bg-blue-50 text-blue-700 text-xs font-black px-4 py-1.5 rounded-full mb-6 uppercase tracking-wider">
+            وفر {savings} $ مع هذه الحزمة
+          </div>
+          <h3 className="text-3xl font-black text-gray-900 mb-4">اشترِ معاً ووفر أكثر</h3>
+          <p className="text-gray-500 text-lg mb-8 max-w-xl mx-auto lg:mx-0">
+            احصل على <span className="font-bold text-gray-900">{bundle.accessory.title}</span> بسعر خيالي عند شرائه مع هذا الهاتف كحزمة متكاملة.
+          </p>
+          
+          <div className="flex items-center justify-center lg:justify-start gap-6">
+            <div className="w-24 h-24 bg-gray-50 rounded-2xl border border-gray-100 p-3 relative">
+              <Image src={mainProduct.image_urls?.[0] || 'https://placehold.co/100'} alt="phone" fill className="object-contain p-3" sizes="96px" />
+            </div>
+            <Plus className="w-8 h-8 text-gray-300" />
+            <div className="w-24 h-24 bg-gray-50 rounded-2xl border border-gray-100 p-3 relative">
+              <Image src={bundle.accessory.image_urls?.[0] || 'https://placehold.co/100'} alt="accessory" fill className="object-contain p-3" sizes="96px" />
             </div>
           </div>
         </div>
+
+        <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 text-center min-w-[280px] w-full lg:w-auto">
+          <div className="text-gray-400 line-through mb-2 font-medium">بدلاً من {oldTotalPrice} $</div>
+          <div className="text-4xl font-black text-blue-600 mb-8">{bundle.bundle_price} $</div>
+          
+          <button 
+            onClick={handleAddBundle}
+            className="w-full font-bold py-4 px-8 rounded-xl transition-all flex items-center justify-center gap-2 bg-gray-900 hover:bg-black text-white active:scale-95"
+          >
+            إضافة الحزمة للسلة
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/domains/cart/components/CheckoutForm.tsx">
+// src/domains/cart/components/CheckoutForm.tsx
+"use client";
+
+import { useState } from "react";
+import { useCartStore } from "../store";
+import { createOrderAction } from "@/domains/orders/actions";
+import { Loader2, CheckCircle2, Store, Truck, MessageCircle } from "lucide-react";
+import Link from "next/link";
+import toast from "react-hot-toast";
+
+export default function CheckoutForm() {
+  const { items, clearCart } = useCartStore();
+  const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
+  const [isPending, setIsPending] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+
+  const totalPrice = items.reduce((total, item) => {
+    const price = item.discount_price ?? item.price;
+    return total + price * item.quantity;
+  }, 0);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+
+    const formData = new FormData(e.currentTarget);
+
+    const result = await createOrderAction({
+      customer_name: formData.get("customer_name") as string,
+      customer_phone: formData.get("customer_phone") as string,
+      delivery_method: deliveryMethod,
+      address: formData.get("address") as string,
+      total_price: totalPrice,
+      items: items,
+    });
+
+    if (result.success) {
+      setIsSuccess(true);
+      setOrderId(result.orderId || null);
+      clearCart();
+      toast.success("تم استلام طلبك بنجاح!");
+    } else {
+      toast.error(result.error || "حدث خطأ أثناء إنشاء الطلب.");
+    }
+    setIsPending(false);
+  };
+
+  if (isSuccess) {
+    return (
+      <div className="bg-white rounded-[2rem] p-10 text-center border border-gray-100 shadow-sm">
+        <div className="bg-green-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-10 h-10 text-green-500" />
+        </div>
+        <h2 className="text-2xl font-black text-gray-900 mb-3">تم استلام طلبك بنجاح!</h2>
+        <p className="text-gray-500 mb-8">
+          رقم الطلب الخاص بك: <br />
+          <span className="font-mono bg-gray-50 px-3 py-1.5 rounded-lg text-lg text-gray-900 font-bold mt-2 inline-block border border-gray-100">
+            {orderId?.slice(0, 8)}
+          </span>
+        </p>
+        
+        <div className="flex flex-col gap-3">
+          <a
+            href={`https://wa.me/96500000000?text=${encodeURIComponent(`مرحباً مركز الباسل، قمت بإنشاء طلب جديد برقم: ${orderId?.slice(0,8)}\nيرجى تأكيد الطلب.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-4 rounded-xl hover:bg-green-600 transition-colors active:scale-95"
+          >
+            <MessageCircle className="w-5 h-5" />
+            تأكيد عبر واتساب
+          </a>
+          <Link href="/" className="w-full bg-gray-50 text-gray-900 font-bold py-4 rounded-xl hover:bg-gray-100 transition-colors active:scale-95 border border-gray-200">
+            العودة للرئيسية
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-gray-100 space-y-8">
+      <h2 className="text-xl font-bold text-gray-900 pb-4 border-b border-gray-100">بيانات التوصيل والدفع</h2>
+      
+      {/* اختيار طريقة الاستلام (ستايل أسود أنيق) */}
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          type="button"
+          onClick={() => setDeliveryMethod("delivery")}
+          className={`flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border-2 transition-all ${
+            deliveryMethod === "delivery" 
+              ? "border-gray-900 bg-gray-900 text-white" 
+              : "border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200"
+          }`}
+        >
+          <Truck className="w-6 h-6" />
+          <span className="font-bold text-sm">توصيل للمنزل</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setDeliveryMethod("pickup")}
+          className={`flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border-2 transition-all ${
+            deliveryMethod === "pickup" 
+              ? "border-gray-900 bg-gray-900 text-white" 
+              : "border-gray-100 text-gray-500 hover:bg-gray-50 hover:border-gray-200"
+          }`}
+        >
+          <Store className="w-6 h-6" />
+          <span className="font-bold text-sm">استلام من المحل</span>
+        </button>
       </div>
 
-      {/* عرض الحزمة الذكية إن وجدت (تظهر أسفل البطاقة الرئيسية) */}
-      {firstBundle && firstBundle.accessory && (
-        <SmartBundle
-          mainProduct={product}
-          bundle={{
-            bundle_price: firstBundle.bundle_price,
-            accessory: firstBundle.accessory,
-          }}
-        />
-      )}
-    </div>
+      <div className="space-y-5">
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-gray-700">الاسم الكريم</label>
+          <input
+            type="text"
+            name="customer_name"
+            required
+            className="w-full px-5 py-4 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all"
+            placeholder="أدخل اسمك بالكامل"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-gray-700">رقم الهاتف</label>
+          <input
+            type="tel"
+            name="customer_phone"
+            required
+            className="w-full px-5 py-4 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all text-left"
+            dir="ltr"
+            placeholder="مثال: 90000000"
+          />
+        </div>
+
+        {deliveryMethod === "delivery" && (
+          <div className="space-y-2 animate-in fade-in zoom-in-95 duration-300">
+            <label className="text-sm font-bold text-gray-700">عنوان التوصيل بالتفصيل</label>
+            <textarea
+              name="address"
+              required
+              rows={3}
+              className="w-full px-5 py-4 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all resize-none"
+              placeholder="المدينة، المنطقة، القطعة، الشارع، رقم المنزل..."
+            ></textarea>
+          </div>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white font-bold py-5 rounded-xl transition-all flex justify-center items-center gap-2 active:scale-95 text-lg shadow-md shadow-gray-900/20"
+      >
+        {isPending ? (
+          <>
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>جاري تأكيد الطلب...</span>
+          </>
+        ) : (
+          `تأكيد الطلب (${totalPrice} $) - الدفع عند الاستلام`
+        )}
+      </button>
+    </form>
   );
 }
 </file>
@@ -3130,14 +2925,26 @@ export default async function ProductDetailsPage({
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { Product } from "./types";
 
-// 1. دالة جلب جميع المنتجات (للصفحة الرئيسية والعروض)
-export async function getProducts(): Promise<Product[]> {
+// 1. دالة جلب المنتجات (الآن تدعم البحث والتصنيف)
+export async function getProducts(searchQuery?: string, category?: string): Promise<Product[]> {
   const supabase = await createServerSupabaseClient();
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select('*')
     .order('created_at', { ascending: false });
+
+  // تفعيل فلتر التصنيف (إذا كان موجوداً ولا يساوي 'all')
+  if (category && category !== 'all') {
+    query = query.eq('category', category);
+  }
+
+  // تفعيل فلتر البحث بالاسم أو العلامة التجارية (غير حساس لحالة الأحرف)
+  if (searchQuery) {
+    query = query.or(`title.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("خطأ في جلب المنتجات:", error.message);
@@ -3189,58 +2996,324 @@ export async function getProductBundles(productId: string) {
 }
 </file>
 
-<file path="src/app/layout.tsx">
-// src/app/layout.tsx
-import type { Metadata, Viewport } from "next";
-import { Cairo } from "next/font/google";
-import "./globals.css";
-import Header from "@/shared/components/Header";
-import { Toaster } from "react-hot-toast"; // 1. استيراد حاوية الإشعارات
+<file path="src/app/cart/page.tsx">
+// src/app/cart/page.tsx
+"use client";
 
-const cairo = Cairo({ subsets: ["latin", "arabic"] });
+import { useCartStore } from "@/domains/cart/store";
+import Image from "next/image";
+import Link from "next/link";
+import { Trash2, ArrowRight, ShoppingBag } from "lucide-react";
+import { useEffect, useState } from "react";
+import CheckoutForm from "@/domains/cart/components/CheckoutForm";
 
-export const viewport: Viewport = {
-  themeColor: "#3b82f6",
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-};
+export default function CartPage() {
+  const { items, removeItem } = useCartStore();
+  const [mounted, setMounted] = useState(false);
 
-export const metadata: Metadata = {
-  title: "مركز الباسل - أحدث الهواتف الذكية والإكسسوارات",
-  description: "أفضل العروض على الهواتف الذكية، الإكسسوارات، وخدمات استبدال الأجهزة في مركز الباسل.",
-  manifest: "/manifest.json",
-};
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+  if (!mounted) return null;
+
+  const totalPrice = items.reduce((total, item) => {
+    const price = item.discount_price ?? item.price;
+    return total + price * item.quantity;
+  }, 0);
+
+  // حالة السلة الفارغة (Clean State)
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 px-4 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm text-center">
+        <div className="bg-gray-50 p-6 rounded-full mb-6 text-gray-400">
+          <ShoppingBag className="w-16 h-16" />
+        </div>
+        <h1 className="text-3xl font-black text-gray-900 mb-4">سلة المشتريات فارغة</h1>
+        <p className="text-gray-500 mb-8 max-w-md text-lg">
+          لم تقم بإضافة أي منتجات إلى السلة بعد. تصفح أحدث عروضنا واكتشف منتجاتنا المميزة.
+        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-black transition-all active:scale-95"
+        >
+          <ArrowRight className="w-5 h-5" />
+          <span>العودة للتسوق</span>
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <html lang="ar" dir="rtl">
-      <body className={`${cairo.className} bg-gray-50 text-gray-900 min-h-screen flex flex-col`}>
-        <Header />
-        
-        {/* 2. وضع الحاوية هنا مع تحديد مكان ظهور الإشعار (أسفل الوسط) */}
-        <Toaster 
-          position="bottom-center"
-          toastOptions={{
-            style: {
-              background: '#333',
-              color: '#fff',
-              borderRadius: '12px',
-              fontFamily: 'inherit',
-              padding: '12px 24px',
-            },
-          }}
-        />
+    <div className="max-w-5xl mx-auto pb-16 space-y-10">
+      
+      <div className="text-center pt-6 pb-2">
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight">مراجعة الطلب</h1>
+        <p className="text-gray-500 mt-3">تأكد من المنتجات المختارة قبل إتمام عملية الشراء.</p>
+      </div>
 
-        <main className="flex-grow container mx-auto px-4 py-8">
-          {children}
-        </main>
-      </body>
-    </html>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        
+        {/* قائمة المنتجات في السلة */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 md:p-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100">المنتجات ({items.length})</h2>
+            
+            <div className="space-y-6">
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center gap-4 md:gap-6 group">
+                  <div className="relative w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100 p-2">
+                    <Image
+                      src={item.image_urls?.[0] || "https://placehold.co/100"}
+                      alt={item.title}
+                      fill
+                      sizes="96px"
+                      className="object-contain p-1"
+                    />
+                  </div>
+                  
+                  <div className="flex-grow">
+                    <Link href={`/product/${item.id}`} className="font-bold text-gray-900 hover:text-gray-600 transition-colors line-clamp-1 text-lg">
+                      {item.title}
+                    </Link>
+                    <div className="text-sm font-medium text-gray-500 mt-1">
+                      الكمية: {item.quantity}
+                    </div>
+                  </div>
+                  
+                  <div className="text-left shrink-0">
+                    <div className="font-black text-gray-900 text-lg mb-2">
+                      {(item.discount_price ?? item.price) * item.quantity} $
+                    </div>
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors flex items-center justify-end gap-1 ml-auto opacity-70 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      إزالة
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-8 pt-6 border-t-2 border-dashed border-gray-100 flex justify-between items-center">
+              <span className="font-bold text-gray-500 text-lg">المجموع الكلي:</span>
+              <span className="text-3xl font-black text-gray-900">
+                {totalPrice} $
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* نموذج إتمام الطلب (Checkout) */}
+        <div className="lg:col-span-5">
+          <CheckoutForm />
+        </div>
+        
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/product/[id]/page.tsx">
+// src/app/product/[id]/page.tsx
+import { getProductById, getProductBundles } from "@/domains/products/queries";
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import { ShieldCheck, Truck, ChevronLeft } from "lucide-react";
+import AddToCartButton from "@/domains/products/components/AddToCartButton";
+import SmartBundle from "@/domains/products/components/SmartBundle";
+import Link from "next/link";
+
+export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  
+  const product = await getProductById(resolvedParams.id);
+
+  if (!product) {
+    notFound();
+  }
+
+  const bundles = await getProductBundles(product.id);
+  const firstBundle = bundles?.[0];
+
+  const imageUrl = product.image_urls && product.image_urls.length > 0 
+    ? product.image_urls[0] 
+    : 'https://placehold.co/600x800/eeeeee/999999?text=No+Image';
+    
+  const hasDiscount = product.discount_price !== null && product.discount_price < product.price;
+
+  return (
+    <div className="space-y-12 pb-12">
+      
+      {/* زر العودة الصغير (Breadcrumb Style) */}
+      <Link href="/" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">
+        <ChevronLeft className="w-4 h-4 mr-1" />
+        العودة للرئيسية
+      </Link>
+
+      <div className="bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 items-start">
+          
+          {/* قسم الصورة (خلفية رمادية فاتحة جداً لإبراز حواف الهواتف البيضاء) */}
+          <div className="relative aspect-[4/5] bg-gray-50/80 rounded-[2rem] overflow-hidden border border-gray-100 flex items-center justify-center p-8">
+            {hasDiscount && (
+              <div className="absolute top-6 right-6 z-10 bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-xl shadow-sm">
+                تخفيض حصري
+              </div>
+            )}
+            <div className="relative w-full h-full">
+              <Image
+                src={imageUrl}
+                alt={product.title}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
+            </div>
+          </div>
+
+          {/* قسم التفاصيل (تصميم نظيف وأنيق) */}
+          <div className="flex flex-col pt-2 md:pt-8">
+            <div className="mb-3 text-blue-600 font-bold text-sm tracking-wider uppercase">
+              {product.brand}
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 leading-tight">
+              {product.title}
+            </h1>
+            
+            <div className="mb-8 pb-8 border-b border-gray-100">
+              {hasDiscount ? (
+                <div className="flex items-baseline gap-4">
+                  <span className="text-5xl font-black text-red-600">{product.discount_price} $</span>
+                  <span className="text-xl text-gray-400 line-through mb-1.5">{product.price} $</span>
+                </div>
+              ) : (
+                <span className="text-5xl font-black text-gray-900">{product.price} $</span>
+              )}
+            </div>
+
+            <p className="text-gray-600 text-lg leading-relaxed mb-10">
+              {product.description || "لا يوجد وصف متاح لهذا المنتج."}
+            </p>
+
+            {/* المواصفات بأسلوب أنيق */}
+            {product.specs && (
+              <div className="mb-10 space-y-4">
+                <h3 className="font-bold text-gray-900 text-lg">المواصفات الرئيسية</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Object.entries(product.specs).map(([key, value]) => (
+                    <div key={key} className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <span className="block text-xs font-bold text-gray-500 uppercase mb-1">{key}</span>
+                      <span className="block font-medium text-gray-900">{String(value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* أزرار الإجراءات */}
+            <div className="mt-auto space-y-6">
+              <AddToCartButton product={product} />
+              
+              <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-gray-500 pt-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-gray-400" />
+                  <span>ضمان الوكيل المعتمد</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-gray-400" />
+                  <span>شحن سريع وآمن</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* الحزمة الذكية */}
+      {firstBundle && firstBundle.accessory && (
+        <SmartBundle 
+          mainProduct={product} 
+          bundle={{
+            bundle_price: firstBundle.bundle_price,
+            accessory: firstBundle.accessory
+          }} 
+        />
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/page.tsx">
+// src/app/page.tsx
+import { getProducts } from "@/domains/products/queries";
+import ProductCard from "@/domains/products/components/ProductCard";
+import ProductFilter from "@/domains/products/components/ProductFilter";
+import { Smartphone, Sparkles, SearchX } from "lucide-react";
+import { Suspense } from "react"; // 1. استيراد Suspense
+
+export const revalidate = 60; 
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const resolvedParams = await searchParams;
+  const q = typeof resolvedParams.q === 'string' ? resolvedParams.q : undefined;
+  const cat = typeof resolvedParams.cat === 'string' ? resolvedParams.cat : undefined;
+
+  const products = await getProducts(q, cat);
+
+  return (
+    <div className="space-y-12 pb-10">
+      
+      <section className="relative overflow-hidden bg-white border border-gray-100 rounded-[2.5rem] p-10 md:p-16 text-center shadow-sm">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-600 opacity-80"></div>
+        <div className="inline-flex items-center justify-center p-3 bg-blue-50 text-blue-600 rounded-full mb-6">
+          <Sparkles className="w-6 h-6" />
+        </div>
+        <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight text-gray-900 drop-shadow-sm">
+          أهلاً بك في <span className="text-transparent bg-clip-text bg-gradient-to-l from-blue-700 to-cyan-500">مركز الباسل</span>
+        </h1>
+        <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          اكتشف أحدث الهواتف الذكية وأفضل الإكسسوارات بأسعار لا تقبل المنافسة، مع ضمان الجودة وتجربة تسوق فريدة.
+        </p>
+      </section>
+
+      <section>
+        {/* 2. تغليف الفلتر لكي لا يعطل توجيه Next.js */}
+        <Suspense fallback={<div className="h-32 w-full bg-gray-50 animate-pulse rounded-[1.5rem] mb-10"></div>}>
+          <ProductFilter />
+        </Suspense>
+        
+        {products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-3xl border border-gray-100 shadow-sm text-center">
+            <div className="bg-gray-50 p-6 rounded-full mb-6 text-gray-400">
+              {q || cat ? <SearchX className="w-12 h-12" /> : <Smartphone className="w-12 h-12" />}
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {q || cat ? "لم نجد نتائج مطابقة لبحثك" : "لا توجد منتجات حالياً"}
+            </h3>
+            <p className="text-gray-500">
+              {q || cat ? "جرب البحث بكلمات أخرى أو قم بإزالة الفلتر." : "نعمل على تحديث الكتالوج الخاص بنا، يرجى العودة قريباً!"}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
 </file>
@@ -3338,6 +3411,62 @@ export default function Header() {
         </div>
       )}
     </header>
+  );
+}
+</file>
+
+<file path="src/app/layout.tsx">
+// src/app/layout.tsx
+import type { Metadata, Viewport } from "next";
+import { Cairo } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "react-hot-toast";
+import StoreLayoutWrapper from "@/shared/components/StoreLayoutWrapper";
+
+const cairo = Cairo({ subsets: ["latin", "arabic"] });
+
+export const viewport: Viewport = {
+  themeColor: "#3b82f6",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export const metadata: Metadata = {
+  title: "مركز الباسل - أحدث الهواتف الذكية والإكسسوارات",
+  description: "أفضل العروض على الهواتف الذكية، الإكسسوارات، وخدمات استبدال الأجهزة في مركز الباسل.",
+  manifest: "/manifest.json",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="ar" dir="rtl">
+      <body className={`${cairo.className} bg-white text-gray-900 min-h-screen flex flex-col`}>
+        
+        <Toaster 
+          position="bottom-center"
+          toastOptions={{
+            style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '12px',
+              fontFamily: 'inherit',
+              padding: '12px 24px',
+            },
+          }}
+        />
+
+        {/* استخدمنا المغلف الذكي هنا ليقرر متى يظهر الهيدر والواتساب */}
+        <StoreLayoutWrapper>
+          {children}
+        </StoreLayoutWrapper>
+
+      </body>
+    </html>
   );
 }
 </file>

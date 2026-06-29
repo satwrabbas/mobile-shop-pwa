@@ -6,6 +6,7 @@ import { createTradeInRequest } from "@/domains/trade-in/actions";
 import { Loader2, CheckCircle2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { STORE_PHONE } from "@/lib/store-contact";
 
 export default function TradeInPage() {
   const [isPending, setIsPending] = useState(false);
@@ -76,7 +77,7 @@ export default function TradeInPage() {
           </div>
           <div className="space-y-3">
             <label className="text-sm font-bold text-gray-700">رقم الهاتف</label>
-            <input type="tel" name="customer_phone" required className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all" placeholder="مثال: 90000000" />
+            <input type="tel" name="customer_phone" required className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all text-left" dir="ltr" placeholder={`مثال: ${STORE_PHONE}`} />
           </div>
         </div>
 

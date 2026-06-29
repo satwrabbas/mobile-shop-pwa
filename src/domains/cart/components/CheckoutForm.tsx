@@ -7,6 +7,7 @@ import { createOrderAction } from "@/domains/orders/actions";
 import { Loader2, CheckCircle2, Store, Truck, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { STORE_NAME, STORE_PHONE, STORE_WHATSAPP } from "@/lib/store-contact";
 
 export default function CheckoutForm() {
   const { items, clearCart } = useCartStore();
@@ -62,7 +63,7 @@ export default function CheckoutForm() {
         
         <div className="flex flex-col gap-3">
           <a
-            href={`https://wa.me/96500000000?text=${encodeURIComponent(`مرحباً مركز الباسل، قمت بإنشاء طلب جديد برقم: ${orderId?.slice(0,8)}\nيرجى تأكيد الطلب.`)}`}
+            href={`https://wa.me/${STORE_WHATSAPP}?text=${encodeURIComponent(`مرحباً ${STORE_NAME}، قمت بإنشاء طلب جديد برقم: ${orderId?.slice(0, 8)}\nيرجى تأكيد الطلب.`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-4 rounded-xl hover:bg-green-600 transition-colors active:scale-95"
@@ -129,7 +130,7 @@ export default function CheckoutForm() {
             required
             className="w-full px-5 py-4 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 focus:bg-white transition-all text-left"
             dir="ltr"
-            placeholder="مثال: 90000000"
+            placeholder={`مثال: ${STORE_PHONE}`}
           />
         </div>
 

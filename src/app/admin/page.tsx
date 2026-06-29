@@ -20,7 +20,7 @@ export default async function AdminDashboardPage() {
       <div className="border-b border-gray-200 pb-4">
         <h1 className="text-3xl font-bold text-gray-900">نظرة عامة</h1>
         <p className="text-gray-500 mt-2">
-          مرحباً بك في لوحة تحكم متجر موبايلي. إليك ملخص أداء المتجر.
+          مرحباً بك في لوحة تحكم مركز الباسل. إليك ملخص أداء المتجر.
         </p>
       </div>
 
