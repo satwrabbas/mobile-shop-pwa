@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { updateTradeInStatus } from "../trade-in/actions";
+import toast from "react-hot-toast";
 import {
   ChevronDown,
   ChevronUp,
@@ -34,10 +35,7 @@ export default function TradeInList({
 
   const handleStatusChange = async (requestId: string, newStatus: string) => {
     setLoadingId(requestId);
-
-    // تحويل القيمة المدخلة إلى رقم
     const val = estimatedValue ? parseFloat(estimatedValue) : undefined;
-
     const result = await updateTradeInStatus(requestId, newStatus, val);
 
     if (result.success) {
@@ -52,8 +50,9 @@ export default function TradeInList({
             : r,
         ),
       );
+      toast.success("تم تحديث التقييم بنجاح!");
     } else {
-      alert("حدث خطأ أثناء تحديث الحالة");
+      toast.error("حدث خطأ أثناء تحديث الحالة.");
     }
     setLoadingId(null);
   };

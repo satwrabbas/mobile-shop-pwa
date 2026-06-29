@@ -14,6 +14,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 // تعريف مبسط لشكل البيانات القادمة من الاستعلام
 type Order = any;
@@ -39,8 +40,9 @@ export default function OrdersList({
       setOrders(
         orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
       );
+      toast.success("تم تحديث حالة الطلب بنجاح!");
     } else {
-      alert("حدث خطأ أثناء تحديث الحالة");
+      toast.error("حدث خطأ أثناء تحديث الحالة.");
     }
     setLoadingId(null);
   };

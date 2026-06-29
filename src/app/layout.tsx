@@ -2,9 +2,8 @@
 import type { Metadata, Viewport } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
-import Header from "@/shared/components/Header";
-import { Toaster } from "react-hot-toast"; // 1. استيراد حاوية الإشعارات
-import WhatsAppButton from "@/shared/components/WhatsAppButton";
+import { Toaster } from "react-hot-toast";
+import StoreLayoutWrapper from "@/shared/components/StoreLayoutWrapper";
 
 const cairo = Cairo({ subsets: ["latin", "arabic"] });
 
@@ -29,9 +28,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body className={`${cairo.className} bg-gray-50 text-gray-900 min-h-screen flex flex-col`}>
-        <Header />
         
-        {/* 2. وضع الحاوية هنا مع تحديد مكان ظهور الإشعار (أسفل الوسط) */}
         <Toaster 
           position="bottom-center"
           toastOptions={{
@@ -45,10 +42,11 @@ export default function RootLayout({
           }}
         />
 
-        <main className="flex-grow container mx-auto px-4 py-8">
+        {/* استخدمنا المغلف الذكي هنا ليقرر متى يظهر الهيدر والواتساب */}
+        <StoreLayoutWrapper>
           {children}
-        </main>
-        <WhatsAppButton />
+        </StoreLayoutWrapper>
+
       </body>
     </html>
   );
