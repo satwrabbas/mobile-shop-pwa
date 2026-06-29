@@ -4,6 +4,7 @@ import { Cairo } from "next/font/google";
 import "./globals.css";
 import Header from "@/shared/components/Header";
 import { Toaster } from "react-hot-toast"; // 1. استيراد حاوية الإشعارات
+import WhatsAppButton from "@/shared/components/WhatsAppButton";
 
 const cairo = Cairo({ subsets: ["latin", "arabic"] });
 
@@ -47,6 +48,7 @@ export default function RootLayout({
         <main className="flex-grow container mx-auto px-4 py-8">
           {children}
         </main>
+        <WhatsAppButton />
       </body>
     </html>
   );
