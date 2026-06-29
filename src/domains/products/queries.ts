@@ -2,14 +2,26 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { Product } from "./types";
 
-// 1. دالة جلب جميع المنتجات (للصفحة الرئيسية والعروض)
-export async function getProducts(): Promise<Product[]> {
+// 1. دالة جلب المنتجات (الآن تدعم البحث والتصنيف)
+export async function getProducts(searchQuery?: string, category?: string): Promise<Product[]> {
   const supabase = await createServerSupabaseClient();
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select('*')
     .order('created_at', { ascending: false });
+
+  // تفعيل فلتر التصنيف (إذا كان موجوداً ولا يساوي 'all')
+  if (category && category !== 'all') {
+    query = query.eq('category', category);
+  }
+
+  // تفعيل فلتر البحث بالاسم أو العلامة التجارية (غير حساس لحالة الأحرف)
+  if (searchQuery) {
+    query = query.or(`title.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("خطأ في جلب المنتجات:", error.message);
