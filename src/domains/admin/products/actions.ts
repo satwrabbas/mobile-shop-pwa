@@ -9,7 +9,24 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// 1. جلب المنتجات للمدير
+// 1. جلب منتج واحد للمدير
+export async function getAdminProductById(productId: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .select("*")
+      .eq("id", productId)
+      .single();
+
+    if (error) throw error;
+    return { success: true, product: data };
+  } catch (error: unknown) {
+    console.error("Get Admin Product Error:", error);
+    return { success: false, product: null };
+  }
+}
+
+// 2. جلب المنتجات للمدير
 export async function getAdminProducts() {
   try {
     const { data, error } = await supabaseAdmin

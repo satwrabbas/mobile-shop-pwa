@@ -7,7 +7,8 @@ import {
   deleteProductAction,
 } from "../products/actions";
 import Image from "next/image";
-import { Edit, Trash2, X, Check, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Edit, Trash2, X, Check, Loader2, DollarSign } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function AdminProductsList({
@@ -127,8 +128,19 @@ export default function AdminProductsList({
               </>
             ) : (
               <>
-                <button onClick={() => startEditing(product)} className="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-100 transition flex items-center justify-center">
+                <Link
+                  href={`/admin/products/edit/${product.id}`}
+                  className="bg-blue-50 text-blue-600 p-2 rounded-lg hover:bg-blue-100 transition flex items-center justify-center"
+                  title="تعديل المنتج"
+                >
                   <Edit className="w-5 h-5" />
+                </Link>
+                <button
+                  onClick={() => startEditing(product)}
+                  className="bg-amber-50 text-amber-600 p-2 rounded-lg hover:bg-amber-100 transition flex items-center justify-center"
+                  title="تعديل سريع للسعر والمخزون"
+                >
+                  <DollarSign className="w-5 h-5" />
                 </button>
                 <button onClick={() => handleDelete(product.id)} disabled={loadingId === product.id} className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center">
                   {loadingId === product.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}

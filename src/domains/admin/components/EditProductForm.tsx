@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { addProductAction } from "../actions";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { updateProductAction } from "../actions";
 import {
   ImagePlus,
   Loader2,
@@ -13,15 +14,15 @@ import {
   Images,
   Plus,
   Trash2,
-  Save,
-  RotateCcw,
   ChevronLeft,
   Sparkles,
   AlertCircle,
+  Save,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import Link from "next/link";
+import { Product } from "@/domains/products/types";
 import {
   ACCESSORY_SPEC_TEMPLATES,
   BRAND_PRESETS,
@@ -32,27 +33,17 @@ import {
   PHONE_SPEC_TEMPLATES,
   ProductPreview,
   SpecRow,
+  specsFromRecord,
   TabId,
   uid,
 } from "./productFormShared";
 
-const DRAFT_KEY = "admin-product-draft";
-
-interface ImageItem {
+interface ImageEntry {
   id: string;
-  file: File;
+  type: "existing" | "new";
   preview: string;
-}
-
-interface FormDraft {
-  title: string;
-  brand: string;
-  category: Category;
-  description: string;
-  price: string;
-  discount_price: string;
-  stock: string;
-  specs: SpecRow[];
+  url?: string;
+  file?: File;
 }
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -62,21 +53,48 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "media", label: "الصور", icon: <Images className="w-4 h-4" /> },
 ];
 
-export default function AddProductForm() {
+function initBrandState(brand: string | null) {
+  if (brand && BRAND_PRESETS.includes(brand)) {
+    return { brand, customBrand: "" };
+  }
+  if (brand) {
+    return { brand: "other", customBrand: brand };
+  }
+  return { brand: "", customBrand: "" };
+}
+
+function initImages(urls: string[] | null): ImageEntry[] {
+  return (urls || []).map((url) => ({
+    id: uid(),
+    type: "existing" as const,
+    preview: url,
+    url,
+  }));
+}
+
+export default function EditProductForm({ product }: { product: Product }) {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<TabId>("basic");
   const [isPending, setIsPending] = useState(false);
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const [images, setImages] = useState<ImageEntry[]>(() =>
+    initImages(product.image_urls)
+  );
 
-  const [title, setTitle] = useState("");
-  const [brand, setBrand] = useState("");
-  const [customBrand, setCustomBrand] = useState("");
-  const [category, setCategory] = useState<Category>("phone");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [discountPrice, setDiscountPrice] = useState("");
-  const [stock, setStock] = useState("1");
-  const [specs, setSpecs] = useState<SpecRow[]>([{ id: uid(), key: "", value: "" }]);
+  const brandInit = initBrandState(product.brand);
+  const [title, setTitle] = useState(product.title);
+  const [brand, setBrand] = useState(brandInit.brand);
+  const [customBrand, setCustomBrand] = useState(brandInit.customBrand);
+  const [category, setCategory] = useState<Category>(product.category);
+  const [description, setDescription] = useState(product.description || "");
+  const [price, setPrice] = useState(product.price.toString());
+  const [discountPrice, setDiscountPrice] = useState(
+    product.discount_price?.toString() || ""
+  );
+  const [stock, setStock] = useState((product.stock ?? 0).toString());
+  const [specs, setSpecs] = useState<SpecRow[]>(() =>
+    specsFromRecord(product.specs)
+  );
 
   const effectiveBrand = brand === "other" ? customBrand : brand;
 
@@ -115,75 +133,11 @@ export default function AddProductForm() {
     return score;
   }, [title, effectiveBrand, price, images.length, description, specs]);
 
-  const saveDraft = useCallback(() => {
-    const draft: FormDraft = {
-      title,
-      brand: brand === "other" ? customBrand : brand,
-      category,
-      description,
-      price,
-      discount_price: discountPrice,
-      stock,
-      specs,
-    };
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    toast.success("تم حفظ المسودة محلياً", { duration: 2000 });
-  }, [title, brand, customBrand, category, description, price, discountPrice, stock, specs]);
-
-  const loadDraft = useCallback((silent = false) => {
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) return;
-      const draft = JSON.parse(raw) as FormDraft;
-      setTitle(draft.title || "");
-      if (draft.brand && BRAND_PRESETS.includes(draft.brand)) {
-        setBrand(draft.brand);
-        setCustomBrand("");
-      } else if (draft.brand) {
-        setBrand("other");
-        setCustomBrand(draft.brand);
-      } else {
-        setBrand("");
-        setCustomBrand("");
-      }
-      setCategory(draft.category || "phone");
-      setDescription(draft.description || "");
-      setPrice(draft.price || "");
-      setDiscountPrice(draft.discount_price || "");
-      setStock(draft.stock || "1");
-      setSpecs(draft.specs?.length ? draft.specs : [{ id: uid(), key: "", value: "" }]);
-      if (!silent) toast.success("تم استرجاع المسودة");
-    } catch {
-      if (!silent) toast.error("تعذر استرجاع المسودة");
-    }
-  }, []);
-
-  const resetForm = () => {
-    if (!window.confirm("هل تريد مسح جميع البيانات؟")) return;
-    setTitle("");
-    setBrand("");
-    setCustomBrand("");
-    setCategory("phone");
-    setDescription("");
-    setPrice("");
-    setDiscountPrice("");
-    setStock("1");
-    setSpecs([{ id: uid(), key: "", value: "" }]);
-    images.forEach((img) => URL.revokeObjectURL(img.preview));
-    setImages([]);
-    localStorage.removeItem(DRAFT_KEY);
-    setActiveTab("basic");
-    toast.success("تم مسح النموذج");
-  };
-
-  useEffect(() => {
-    if (localStorage.getItem(DRAFT_KEY)) loadDraft(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   useEffect(() => {
     return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.preview));
+      images
+        .filter((img) => img.type === "new")
+        .forEach((img) => URL.revokeObjectURL(img.preview));
     };
   }, [images]);
 
@@ -199,6 +153,7 @@ export default function AddProductForm() {
 
     const toAdd = files.slice(0, remaining).map((file) => ({
       id: uid(),
+      type: "new" as const,
       file,
       preview: URL.createObjectURL(file),
     }));
@@ -210,7 +165,7 @@ export default function AddProductForm() {
   const removeImage = (id: string) => {
     setImages((prev) => {
       const item = prev.find((i) => i.id === id);
-      if (item) URL.revokeObjectURL(item.preview);
+      if (item?.type === "new") URL.revokeObjectURL(item.preview);
       return prev.filter((i) => i.id !== id);
     });
   };
@@ -280,26 +235,27 @@ export default function AddProductForm() {
     );
     formData.append("specs", JSON.stringify(specsObj));
 
-    images.forEach((img) => formData.append("images", img.file));
+    const imageOrder = images.map((img) =>
+      img.type === "existing" && img.url
+        ? { type: "existing" as const, url: img.url }
+        : { type: "new" as const }
+    );
+    formData.append("image_order", JSON.stringify(imageOrder));
 
-    const result = await addProductAction(formData);
+    const existingUrls = images.filter((i) => i.type === "existing" && i.url).map((i) => i.url!);
+    formData.append("existing_image_urls", JSON.stringify(existingUrls));
+
+    images
+      .filter((i) => i.type === "new" && i.file)
+      .forEach((img) => formData.append("images", img.file!));
+
+    const result = await updateProductAction(product.id, formData);
 
     if (result.success) {
-      toast.success("تمت إضافة المنتج بنجاح!");
-      localStorage.removeItem(DRAFT_KEY);
-      images.forEach((img) => URL.revokeObjectURL(img.preview));
-      setImages([]);
-      setTitle("");
-      setBrand("");
-      setCustomBrand("");
-      setDescription("");
-      setPrice("");
-      setDiscountPrice("");
-      setStock("1");
-      setSpecs([{ id: uid(), key: "", value: "" }]);
-      setActiveTab("basic");
+      toast.success("تم تحديث المنتج بنجاح!");
+      router.push("/admin/products");
     } else {
-      toast.error(result.error || "حدث خطأ أثناء إضافة المنتج.");
+      toast.error(result.error || "حدث خطأ أثناء تحديث المنتج.");
     }
 
     setIsPending(false);
@@ -309,7 +265,6 @@ export default function AddProductForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* شريط التقدم */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
           <div className="flex items-center gap-2">
@@ -317,28 +272,10 @@ export default function AddProductForm() {
             <span className="font-bold text-gray-900">اكتمال البيانات</span>
             <span className="text-sm text-gray-500">{completionScore}%</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={saveDraft}
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
-            >
-              <Save className="w-4 h-4" />
-              حفظ مسودة
-            </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" />
-              مسح
-            </button>
-          </div>
           {!isFormValid && (
-            <p className="text-xs text-amber-600 flex items-center gap-1 sm:mr-auto">
+            <p className="text-xs text-amber-600 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
-              أكمل جميع الحقول المطلوبة لتفعيل النشر
+              أكمل جميع الحقول المطلوبة لتفعيل الحفظ
             </p>
           )}
         </div>
@@ -351,9 +288,7 @@ export default function AddProductForm() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        {/* النموذج */}
         <div className="xl:col-span-3 space-y-4">
-          {/* التبويبات */}
           <div className="flex gap-1 p-1 bg-gray-100 rounded-xl overflow-x-auto">
             {TABS.map((tab) => (
               <button
@@ -373,7 +308,6 @@ export default function AddProductForm() {
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8 min-h-[420px]">
-            {/* تبويب المعلومات */}
             {activeTab === "basic" && (
               <div className="space-y-6 animate-in fade-in duration-200">
                 <div className="space-y-2">
@@ -382,7 +316,6 @@ export default function AddProductForm() {
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    required
                     className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-all"
                     placeholder="مثال: iPhone 15 Pro Max 256GB"
                   />
@@ -420,7 +353,6 @@ export default function AddProductForm() {
                     <select
                       value={brand}
                       onChange={(e) => setBrand(e.target.value)}
-                      required={brand !== "other"}
                       className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
                     >
                       <option value="">اختر العلامة</option>
@@ -434,12 +366,11 @@ export default function AddProductForm() {
                   </div>
                   {brand === "other" && (
                     <div className="space-y-2 animate-in fade-in">
-                      <label className="text-sm font-bold text-gray-700">اسم العلامة</label>
+                      <label className="text-sm font-bold text-gray-700">اسم العلامة *</label>
                       <input
                         type="text"
                         value={customBrand}
                         onChange={(e) => setCustomBrand(e.target.value)}
-                        required
                         className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
                         placeholder="أدخل اسم العلامة"
                       />
@@ -465,7 +396,6 @@ export default function AddProductForm() {
               </div>
             )}
 
-            {/* تبويب التسعير */}
             {activeTab === "pricing" && (
               <div className="space-y-6 animate-in fade-in duration-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -477,7 +407,6 @@ export default function AddProductForm() {
                       min="0"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
-                      required
                       className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
                       placeholder="0.00"
                     />
@@ -530,7 +459,6 @@ export default function AddProductForm() {
                     min="0"
                     value={stock}
                     onChange={(e) => setStock(e.target.value)}
-                    required
                     className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
                   />
                   {parseInt(stock) === 0 && (
@@ -543,7 +471,6 @@ export default function AddProductForm() {
               </div>
             )}
 
-            {/* تبويب المواصفات */}
             {activeTab === "specs" && (
               <div className="space-y-6 animate-in fade-in duration-200">
                 <div>
@@ -570,14 +497,14 @@ export default function AddProductForm() {
                         type="text"
                         value={spec.key}
                         onChange={(e) => updateSpec(spec.id, "key", e.target.value)}
-                        placeholder="المواصفة"
+                        placeholder="المواصفة *"
                         className="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                       />
                       <input
                         type="text"
                         value={spec.value}
                         onChange={(e) => updateSpec(spec.id, "value", e.target.value)}
-                        placeholder="القيمة"
+                        placeholder="القيمة *"
                         className="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                       />
                       <button
@@ -602,7 +529,6 @@ export default function AddProductForm() {
               </div>
             )}
 
-            {/* تبويب الصور */}
             {activeTab === "media" && (
               <div className="space-y-6 animate-in fade-in duration-200">
                 <input
@@ -611,17 +537,17 @@ export default function AddProductForm() {
                   accept="image/*"
                   multiple
                   className="hidden"
-                  id="product-images"
+                  id="edit-product-images"
                   onChange={handleImagesChange}
                 />
 
                 <label
-                  htmlFor="product-images"
+                  htmlFor="edit-product-images"
                   className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 hover:border-blue-300 transition-all cursor-pointer flex flex-col items-center gap-3"
                 >
                   <ImagePlus className="w-12 h-12 text-gray-400" />
                   <div>
-                    <span className="text-sm font-bold text-gray-700 block">اضغط لرفع الصور</span>
+                    <span className="text-sm font-bold text-gray-700 block">اضغط لرفع صور جديدة</span>
                     <span className="text-xs text-gray-400 mt-1 block">
                       حتى {MAX_IMAGES} صور — يتم ضغطها تلقائياً إلى WebP
                     </span>
@@ -637,6 +563,11 @@ export default function AddProductForm() {
                           {index === 0 && (
                             <span className="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
                               رئيسية
+                            </span>
+                          )}
+                          {img.type === "existing" && (
+                            <span className="absolute bottom-2 right-2 bg-gray-800/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                              حالية
                             </span>
                           )}
                         </div>
@@ -675,7 +606,6 @@ export default function AddProductForm() {
             )}
           </div>
 
-          {/* أزرار الإجراء */}
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="submit"
@@ -685,10 +615,13 @@ export default function AddProductForm() {
               {isPending ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  جاري الرفع والحفظ...
+                  جاري الحفظ...
                 </>
               ) : (
-                "نشر المنتج"
+                <>
+                  <Save className="w-5 h-5" />
+                  حفظ التعديلات
+                </>
               )}
             </button>
             <Link
@@ -701,7 +634,6 @@ export default function AddProductForm() {
           </div>
         </div>
 
-        {/* المعاينة الجانبية */}
         <div className="xl:col-span-2 space-y-4">
           <div className="xl:sticky xl:top-6 space-y-4">
             <ProductPreview
